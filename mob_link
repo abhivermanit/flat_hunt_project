@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>Hyd Rental Map</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif; background:#f2f2f7; color:#1c1c1e; }
+
+/* ── STATUS BAR SAFE AREA ── */
+:root {
+  --safe-top: env(safe-area-inset-top, 44px);
+  --safe-bot: env(safe-area-inset-bottom, 34px);
+  --header-h: calc(52px + var(--safe-top));
+  --nav-h: calc(56px + var(--safe-bot));
+  --blue: #0C447C;
+  --red: #e00000;
+}
+
+/* ── HEADER ── */
+header {
+  position: fixed; top:0; left:0; right:0; z-index:50;
+  background:#0C447C;
+  padding: var(--safe-top) 16px 12px;
+  display:flex; align-items:center; justify-content:space-between;
+  height: var(--header-h);
+}
+.hdr-left { display:flex; align-items:center; gap:8px; }
+#back-btn {
+  display:none;
+  background:rgba(255,255,255,0.2);
+  border:none; color:white;
+  border-radius:8px; padding:6px 12px;
+  font-size:14px; font-family:inherit;
+}
+#page-title { font-size:16px; font-weight:600; color:white; }
+#page-label { font-size:12px; color:rgba(255,255,255,0.7); }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position:fixed; bottom:0; left:0; right:0; z-index:50;
+  background:rgba(255,255,255,0.95);
+  backdrop-filter: blur(20px);
+  border-top: 0.5px solid #e0e0e0;
+  display:flex;
+  height: var(--nav-h);
+  padding-bottom: var(--safe-bot);
+}
+.nav-tab {
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:3px; font-size:10px; color:#8e8e93;
+  padding-top:8px;
+}
+.nav-tab.active { color:#0C447C; }
+.nav-icon { font-size:22px; line-height:1; }
+
+/* ── PAGES ── */
+.page {
+  position:fixed;
+  top: var(--header-h);
+  bottom: var(--nav-h);
+  left:0; right:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling: touch;
+  display:none;
+}
+.page.active { display:block; }
+
+/* ── MAP PAGE ── */
+#page-map { background:#f2f2f7; }
+.map-container {
+  padding:12px;
+  display:flex; flex-direction:column; gap:10px;
+}
+.map-box {
+  background:white; border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 1px 4px rgba(0,0,0,0.08);
+}
+.map-box svg { width:100%; height:auto; display:block; }
+
+/* Quadrant tap hint */
+.tap-hint {
+  text-align:center; font-size:12px; color:#8e8e93;
+  padding:6px 0 2px;
+}
+
+/* ── SOCIETIES PAGE ── */
+#page-list { background:#f2f2f7; }
+.section { padding:12px 16px 0; }
+.section-label {
+  font-size:12px; font-weight:500; color:#8e8e93;
+  text-transform:uppercase; letter-spacing:0.05em;
+  margin-bottom:8px;
+}
+.q-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:8px;
+  padding:0 16px 12px;
+}
+.q-card {
+  background:white; border-radius:12px;
+  padding:12px; text-align:center;
+  box-shadow:0 1px 3px rgba(0,0,0,0.06);
+}
+.q-card .q-label { font-size:13px; font-weight:600; color:#0C447C; }
+.q-card .q-sub   { font-size:11px; color:#8e8e93; margin-top:2px; }
+
+.soc-list { padding:0 16px 16px; }
+.soc-card {
+  background:white; border-radius:12px;
+  padding:14px; margin-bottom:8px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.06);
+  display:flex; justify-content:space-between; align-items:flex-start;
+}
+.soc-name  { font-size:14px; font-weight:600; color:#1c1c1e; margin-bottom:3px; }
+.soc-area  { font-size:12px; color:#8e8e93; margin-bottom:2px; }
+.soc-tag {
+  display:inline-block; font-size:11px;
+  background:#f2f2f7; color:#555;
+  border-radius:6px; padding:2px 7px;
+  margin:2px 2px 0 0;
+}
+.soc-price { font-size:15px; font-weight:700; color:#0C447C; white-space:nowrap; }
+.soc-del   { font-size:12px; color:#ff3b30; margin-top:4px; text-align:right; }
+
+.empty-state {
+  text-align:center; color:#8e8e93; font-size:13px;
+  padding:40px 20px;
+}
+
+/* ── LEGEND PAGE ── */
+#page-legend { background:#f2f2f7; }
+.legend-section { padding:16px; }
+.legend-card {
+  background:white; border-radius:12px;
+  overflow:hidden; margin-bottom:12px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.06);
+}
+.legend-row {
+  display:flex; align-items:center; gap:12px;
+  padding:13px 16px;
+  border-bottom:0.5px solid #f2f2f7;
+}
+.legend-row:last-child { border-bottom:none; }
+.ldot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+.lname { font-size:14px; color:#1c1c1e; }
+.price-legend-card {
+  background:white; border-radius:12px;
+  overflow:hidden; margin-bottom:12px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.06);
+}
+.price-row {
+  display:flex; align-items:center; gap:12px;
+  padding:13px 16px;
+  border-bottom:0.5px solid #f2f2f7;
+}
+.price-row:last-child { border-bottom:none; }
+.price-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+
+/* ── FAB ADD BUTTON ── */
+.fab {
+  position:fixed;
+  right:20px;
+  bottom: calc(var(--nav-h) + 16px);
+  z-index:40;
+  width:54px; height:54px;
+  background:#0C447C; color:white;
+  border:none; border-radius:50%;
+  font-size:28px; line-height:1;
+  box-shadow:0 4px 12px rgba(12,68,124,0.4);
+  display:flex; align-items:center; justify-content:center;
+}
+
+/* ── BOTTOM SHEET MODAL ── */
+.sheet-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.4); z-index:200;
+  align-items:flex-end;
+}
+.sheet-overlay.open { display:flex; }
+.sheet {
+  background:white;
+  border-radius:20px 20px 0 0;
+  width:100%;
+  max-height:90vh;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:0 0 calc(var(--safe-bot) + 16px);
+}
+.sheet-handle {
+  width:36px; height:4px; border-radius:2px;
+  background:#e0e0e0; margin:12px auto 4px;
+}
+.sheet-title {
+  font-size:17px; font-weight:600;
+  padding:8px 20px 16px;
+  border-bottom:0.5px solid #f2f2f7;
+}
+.sheet-body { padding:16px 20px; }
+.sheet-label {
+  font-size:12px; font-weight:500; color:#8e8e93;
+  text-transform:uppercase; letter-spacing:0.04em;
+  margin-bottom:6px; margin-top:14px; display:block;
+}
+.sheet-label:first-child { margin-top:0; }
+.sheet-input {
+  width:100%; padding:12px 14px;
+  background:#f2f2f7; border:none; border-radius:10px;
+  font-size:16px; font-family:inherit; color:#1c1c1e;
+  -webkit-appearance:none;
+}
+.sheet-input:focus { outline:2px solid #0C447C; outline-offset:-1px; }
+.sheet-actions {
+  display:flex; gap:10px;
+  padding:16px 20px 0;
+}
+.sheet-btn-cancel {
+  flex:1; padding:14px; border-radius:12px;
+  background:#f2f2f7; color:#1c1c1e;
+  border:none; font-size:16px; font-family:inherit;
+}
+.sheet-btn-save {
+  flex:2; padding:14px; border-radius:12px;
+  background:#0C447C; color:white;
+  border:none; font-size:16px; font-weight:600; font-family:inherit;
+}
+
+/* quadrant overlay tap area */
+.q-overlay { opacity:0; cursor:pointer; }
+.area-pin  { cursor:pointer; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="hdr-left">
+    <button id="back-btn" onclick="goBack()">← Back</button>
+    <div id="page-title">Hyd Rental Map</div>
+  </div>
+  <div id="page-label">Tap quadrant to explore</div>
+</header>
+
+<!-- PAGES -->
+
+<!-- MAP -->
+<div class="page active" id="page-map">
+  <div class="map-container">
+    <div class="tap-hint" id="map-hint">Tap a quadrant to zoom in</div>
+    <div class="map-box" id="map-wrap"></div>
+  </div>
+</div>
+
+<!-- SOCIETIES LIST -->
+<div class="page" id="page-list">
+  <div style="padding:12px 16px 4px">
+    <div class="section-label">Quadrants</div>
+  </div>
+  <div class="q-grid" id="q-summary"></div>
+  <div style="padding:0 16px 4px">
+    <div class="section-label" id="list-title">All societies</div>
+  </div>
+  <div class="soc-list" id="society-list"></div>
+</div>
+
+<!-- LEGEND -->
+<div class="page" id="page-legend">
+  <div class="legend-section">
+    <div class="section-label" style="margin-bottom:10px">Zone colours</div>
+    <div class="legend-card">
+      <div class="legend-row"><div class="ldot" style="background:#e00000"></div><div class="lname">IT corridor</div></div>
+      <div class="legend-row"><div class="ldot" style="background:#185FA5"></div><div class="lname">Central</div></div>
+      <div class="legend-row"><div class="ldot" style="background:#854F0B"></div><div class="lname">West</div></div>
+      <div class="legend-row"><div class="ldot" style="background:#3B6D11"></div><div class="lname">East / Mid</div></div>
+      <div class="legend-row"><div class="ldot" style="background:#111111"></div><div class="lname">Old city</div></div>
+    </div>
+
+    <div class="section-label" style="margin-bottom:10px">Rent colours</div>
+    <div class="price-legend-card">
+      <div class="price-row"><div class="price-dot" style="background:#27ae60"></div><div class="lname">Under ₹15,000</div></div>
+      <div class="price-row"><div class="price-dot" style="background:#f39c12"></div><div class="lname">₹15,000 – ₹25,000</div></div>
+      <div class="price-row"><div class="price-dot" style="background:#c0392b"></div><div class="lname">Above ₹25,000</div></div>
+      <div class="price-row"><div class="price-dot" style="background:#888780"></div><div class="lname">Rent not set</div></div>
+    </div>
+
+    <div class="section-label" style="margin-bottom:10px">Quadrant colors</div>
+    <div class="price-legend-card">
+      <div class="price-row"><div class="price-dot" style="background:#39ff14;border:1px solid #ccc"></div><div class="lname">NW & SW — fluorescent green</div></div>
+      <div class="price-row"><div class="price-dot" style="background:#1d3557"></div><div class="lname">NE — dark blue</div></div>
+      <div class="price-row"><div class="price-dot" style="background:#6b2737"></div><div class="lname">SE — dark red</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fab" onclick="openModal('')">+</button>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <div class="nav-tab active" id="tab-map" onclick="switchTab('map')">
+    <div class="nav-icon">🗺</div>
+    <div>Map</div>
+  </div>
+  <div class="nav-tab" id="tab-list" onclick="switchTab('list')">
+    <div class="nav-icon">🏘</div>
+    <div>Societies</div>
+  </div>
+  <div class="nav-tab" id="tab-legend" onclick="switchTab('legend')">
+    <div class="nav-icon">🎨</div>
+    <div>Legend</div>
+  </div>
+</nav>
+
+<!-- BOTTOM SHEET MODAL -->
+<div class="sheet-overlay" id="sheet-overlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Add society</div>
+    <div class="sheet-body">
+      <span class="sheet-label">Society name</span>
+      <input class="sheet-input" type="text" id="inp-name" placeholder="e.g. Aparna Serene Park"/>
+      <span class="sheet-label">Area</span>
+      <input class="sheet-input" type="text" id="inp-area" placeholder="e.g. Kondapur"/>
+      <span class="sheet-label">Monthly rent (₹)</span>
+      <input class="sheet-input" type="number" id="inp-rent" placeholder="e.g. 22000" inputmode="numeric"/>
+      <span class="sheet-label">Deposit (₹)</span>
+      <input class="sheet-input" type="number" id="inp-deposit" placeholder="e.g. 66000" inputmode="numeric"/>
+      <span class="sheet-label">Price range</span>
+      <select class="sheet-input" id="inp-pricerange">
+        <option value="">-- Select --</option>
+        <option>Under ₹15,000</option>
+        <option>₹15,000 – ₹20,000</option>
+        <option>₹20,000 – ₹25,000</option>
+        <option>₹25,000 – ₹30,000</option>
+        <option>₹30,000 – ₹40,000</option>
+        <option>Above ₹40,000</option>
+      </select>
+      <span class="sheet-label">Furnishing</span>
+      <select class="sheet-input" id="inp-furnish">
+        <option>Semi-furnished</option>
+        <option>Fully furnished</option>
+        <option>Unfurnished</option>
+      </select>
+      <span class="sheet-label">Balcony</span>
+      <select class="sheet-input" id="inp-balcony">
+        <option value="">-- Select --</option>
+        <option>Yes</option>
+        <option>No</option>
+        <option>Yes — multiple</option>
+      </select>
+      <span class="sheet-label">Sunlight</span>
+      <select class="sheet-input" id="inp-sunlight">
+        <option value="">-- Select --</option>
+        <option>Good — all day</option>
+        <option>Morning only</option>
+        <option>Evening only</option>
+        <option>Minimal</option>
+      </select>
+      <span class="sheet-label">Notes</span>
+      <textarea class="sheet-input" id="inp-notes" rows="3" placeholder="Pros, cons, distance from office..." style="resize:none;height:80px"></textarea>
+    </div>
+    <div class="sheet-actions">
+      <button class="sheet-btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="sheet-btn-save" onclick="saveSociety()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ────────────────────────────────────────────────────────────────────
+
+const QUADRANTS = {
+  NW: {
+    label:'North West', color:'#1a7a00', bg:'#ccff99',
+    areas:[
+      { name:'Miyapur',     cx:120, cy:120, fc:'#e00000', tc:'#8b0000' },
+      { name:'Kukatpally',  cx:200, cy:130, fc:'#e00000', tc:'#8b0000' },
+      { name:'Kompally',    cx:300, cy: 90, fc:'#e00000', tc:'#8b0000' },
+      { name:'Bachupally',  cx:270, cy:140, fc:'#e00000', tc:'#8b0000' },
+      { name:'Kondapur',    cx:130, cy:200, fc:'#e00000', tc:'#8b0000' },
+      { name:'Hitech City', cx: 90, cy:260, fc:'#e00000', tc:'#8b0000' },
+      { name:'Madhapur',    cx:160, cy:310, fc:'#e00000', tc:'#8b0000' },
+      { name:'Nallagandla', cx: 80, cy:360, fc:'#e00000', tc:'#8b0000' },
+    ]
+  },
+  NE: {
+    label:'North East', color:'#1d3557', bg:'#dbe9f9',
+    areas:[
+      { name:'Secunderabad', cx:180, cy:110, fc:'#e00000', tc:'#8b0000' },
+      { name:'Malkajgiri',   cx:310, cy:140, fc:'#3B6D11', tc:'#27500A' },
+      { name:'Alwal',        cx:380, cy:180, fc:'#3B6D11', tc:'#27500A' },
+      { name:'Kompally',     cx:250, cy: 90, fc:'#e00000', tc:'#8b0000' },
+      { name:'Begumpet',     cx:130, cy:210, fc:'#185FA5', tc:'#0C447C' },
+      { name:'Uppal',        cx:360, cy:260, fc:'#3B6D11', tc:'#27500A' },
+      { name:'Ameerpet',     cx:120, cy:290, fc:'#185FA5', tc:'#0C447C' },
+    ]
+  },
+  SW: {
+    label:'South West', color:'#1a7a00', bg:'#ccff99',
+    areas:[
+      { name:'Gachibowli',     cx: 90, cy:120, fc:'#e00000', tc:'#8b0000' },
+      { name:'Nallagandla',    cx: 70, cy:200, fc:'#e00000', tc:'#8b0000' },
+      { name:'Financial Dist', cx:140, cy:160, fc:'#854F0B', tc:'#633806' },
+      { name:'Nanakramguda',   cx:200, cy:120, fc:'#854F0B', tc:'#633806' },
+      { name:'Manikonda',      cx:200, cy:210, fc:'#854F0B', tc:'#633806' },
+      { name:'Kokapet',        cx:180, cy:300, fc:'#854F0B', tc:'#633806' },
+      { name:'Puppalaguda',    cx:130, cy:280, fc:'#854F0B', tc:'#633806' },
+      { name:'Tolichowki',     cx:280, cy:160, fc:'#3B6D11', tc:'#27500A' },
+      { name:'Mehdipatnam',    cx:310, cy:230, fc:'#3B6D11', tc:'#27500A' },
+      { name:'Masab Tank',     cx:350, cy:160, fc:'#3B6D11', tc:'#27500A' },
+      { name:'Khajaguda',      cx:110, cy:340, fc:'#854F0B', tc:'#633806' },
+      { name:'Masjid Banda',   cx:240, cy:340, fc:'#854F0B', tc:'#633806' },
+      { name:'Narsingi',       cx: 80, cy:400, fc:'#854F0B', tc:'#633806' },
+      { name:'Gowlidoddy',     cx:310, cy:300, fc:'#3B6D11', tc:'#27500A' },
+    ]
+  },
+  SE: {
+    label:'South East', color:'#6b2737', bg:'#fde8ec',
+    areas:[
+      { name:'Banjara Hills', cx:120, cy:120, fc:'#185FA5', tc:'#0C447C' },
+      { name:'Jubilee Hills', cx:180, cy:170, fc:'#185FA5', tc:'#0C447C' },
+      { name:'Somajiguda',    cx: 90, cy:200, fc:'#185FA5', tc:'#0C447C' },
+      { name:'LB Nagar',      cx:380, cy:160, fc:'#3B6D11', tc:'#27500A' },
+      { name:'Dilsukhnagar',  cx:360, cy:230, fc:'#3B6D11', tc:'#27500A' },
+      { name:'Uppal',         cx:360, cy:120, fc:'#3B6D11', tc:'#27500A' },
+      { name:'Charminar',     cx:300, cy:300, fc:'#111111', tc:'#000000' },
+      { name:'Falaknuma',     cx:270, cy:370, fc:'#111111', tc:'#000000' },
+      { name:'Mehdipatnam',   cx:160, cy:260, fc:'#3B6D11', tc:'#27500A' },
+    ]
+  }
+};
+
+const QCOLORS = { NW:'#39ff14', NE:'#1d3557', SW:'#39ff14', SE:'#6b2737' };
+const QFILLS  = { NW:'#39ff1440', NE:'#dbe9f933', SW:'#39ff1440', SE:'#fde8ec33' };
+
+let currentView = 'main';
+let currentTab  = 'map';
+
+const DEFAULT_SOCIETIES = [
+  { id:1, name:'Bloomfield Elation Villas', area:'Khajaguda', rent:0, deposit:0, furnish:'Semi-furnished', notes:'', pricerange:'', balcony:'', sunlight:'', quadrant:'SW' },
+  { id:2, name:'Niharika Exotica',          area:'Khajaguda', rent:0, deposit:0, furnish:'Semi-furnished', notes:'', pricerange:'', balcony:'', sunlight:'', quadrant:'SW' },
+  { id:3, name:'Jains Carlton Creek',       area:'Khajaguda', rent:0, deposit:0, furnish:'Semi-furnished', notes:'', pricerange:'', balcony:'', sunlight:'', quadrant:'SW' },
+];
+
+let stored = JSON.parse(localStorage.getItem('hyd_societies') || 'null');
+if (!stored) { stored = DEFAULT_SOCIETIES; localStorage.setItem('hyd_societies', JSON.stringify(stored)); }
+let societies = stored;
+
+// ── TAB SWITCHING ────────────────────────────────────────────────────────────
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+
+  if (tab === 'map') {
+    document.getElementById('fab').style.display = 'flex';
+    if (currentView === 'main') renderMainMap();
+    else renderQuadrantMap(currentView);
+  } else if (tab === 'list') {
+    document.getElementById('fab').style.display = 'flex';
+    renderQSummary(); renderList();
+  } else {
+    document.getElementById('fab').style.display = 'none';
+  }
+}
+
+// ── ROUTING ──────────────────────────────────────────────────────────────────
+
+function showMain() {
+  currentView = 'main';
+  document.getElementById('back-btn').style.display = 'none';
+  document.getElementById('page-title').textContent = 'Hyd Rental Map';
+  document.getElementById('page-label').textContent = 'Tap quadrant to explore';
+  document.getElementById('map-hint').textContent   = 'Tap a quadrant to zoom in';
+  document.getElementById('list-title').textContent = 'All societies';
+  renderMainMap(); renderList(); renderQSummary();
+}
+
+function goBack() {
+  showMain();
+}
+
+function showQuadrant(q) {
+  currentView = q;
+  const info = QUADRANTS[q];
+  document.getElementById('back-btn').style.display = '';
+  document.getElementById('page-title').textContent = info.label;
+  document.getElementById('page-label').textContent = 'Tap pin to add society';
+  document.getElementById('map-hint').textContent   = 'Tap any area pin to add a society';
+  document.getElementById('list-title').textContent = info.label + ' societies';
+  renderQuadrantMap(q); renderQSummary(); renderList();
+}
+
+// ── MAIN MAP ─────────────────────────────────────────────────────────────────
+
+function renderMainMap() {
+  const counts = { NW:0, NE:0, SW:0, SE:0 };
+  societies.forEach(s => { if(s.quadrant) counts[s.quadrant]++; });
+
+  document.getElementById('map-wrap').innerHTML = `
+  <svg viewBox="0 0 520 520" xmlns="http://www.w3.org/2000/svg">
+    <rect x="30" y="30" width="460" height="460" rx="4" fill="#ddeaf5" stroke="#a0b8d0" stroke-width="0.5"/>
+    <text x="260" y="22"  text-anchor="middle" font-size="13" font-weight="500" fill="#2C2C2A" font-family="sans-serif">N</text>
+    <text x="260" y="510" text-anchor="middle" font-size="13" font-weight="500" fill="#2C2C2A" font-family="sans-serif">S</text>
+    <text x="15"  y="264" text-anchor="middle" font-size="13" font-weight="500" fill="#2C2C2A" font-family="sans-serif">W</text>
+    <text x="507" y="264" text-anchor="middle" font-size="13" font-weight="500" fill="#2C2C2A" font-family="sans-serif">E</text>
+
+    <rect class="q-overlay" x="30"  y="30"  width="230" height="230" rx="4" fill="${QFILLS.NW}" stroke="${QCOLORS.NW}" stroke-width="2" onclick="showQuadrant('NW')"/>
+    <rect class="q-overlay" x="260" y="30"  width="230" height="230" rx="4" fill="${QFILLS.NE}" stroke="${QCOLORS.NE}" stroke-width="2" onclick="showQuadrant('NE')"/>
+    <rect class="q-overlay" x="30"  y="260" width="230" height="230" rx="4" fill="${QFILLS.SW}" stroke="${QCOLORS.SW}" stroke-width="2" onclick="showQuadrant('SW')"/>
+    <rect class="q-overlay" x="260" y="260" width="230" height="230" rx="4" fill="${QFILLS.SE}" stroke="${QCOLORS.SE}" stroke-width="2" onclick="showQuadrant('SE')"/>
+
+    <text x="80"  y="58"  font-size="12" font-weight="600" fill="${QCOLORS.NW==='#39ff14'?'#1a7a00':QCOLORS.NW}" font-family="sans-serif" style="pointer-events:none">NW · ${counts.NW}</text>
+    <text x="295" y="58"  font-size="12" font-weight="600" fill="${QCOLORS.NE}" font-family="sans-serif" style="pointer-events:none">NE · ${counts.NE}</text>
+    <text x="80"  y="288" font-size="12" font-weight="600" fill="${QCOLORS.SW==='#39ff14'?'#1a7a00':QCOLORS.SW}" font-family="sans-serif" style="pointer-events:none">SW · ${counts.SW}</text>
+    <text x="295" y="288" font-size="12" font-weight="600" fill="${QCOLORS.SE}" font-family="sans-serif" style="pointer-events:none">SE · ${counts.SE}</text>
+
+    <line x1="260" y1="30"  x2="260" y2="490" stroke="#90aac8" stroke-width="1" stroke-dasharray="5,4"/>
+    <line x1="30"  y1="260" x2="490" y2="260" stroke="#90aac8" stroke-width="1" stroke-dasharray="5,4"/>
+
+    <path d="M200,215 Q230,200 260,205 Q285,198 310,208 Q335,205 355,220 Q368,238 365,258 Q368,278 355,298 Q338,318 315,328 Q290,338 262,335 Q235,338 210,328 Q188,315 178,295 Q168,275 170,255 Q170,232 200,215Z" fill="#c0d8ee" stroke="#90b0cc" stroke-width="0.5"/>
+    <text x="262" y="272" text-anchor="middle" font-size="8" fill="#5F5E5A" font-family="sans-serif">Hussain Sagar</text>
+
+    <g font-family="sans-serif">${mainPins()}</g>
+    ${societies.map(s => societyDot(s)).join('')}
+  </svg>`;
+}
+
+function mainPins() {
+  const pins = [
+    { n:'Secunderabad',  cx:262, cy:218, fc:'#e00000', tc:'#8b0000', ta:'middle', ty:210, tx:262 },
+    { n:'Begumpet',      cx:232, cy:238, fc:'#185FA5', tc:'#0C447C', ta:'end',    ty:232, tx:228 },
+    { n:'Ameerpet',      cx:232, cy:258, fc:'#185FA5', tc:'#0C447C', ta:'end',    ty:253, tx:228 },
+    { n:'Banjara Hills', cx:288, cy:258, fc:'#185FA5', tc:'#0C447C', ta:'start',  ty:253, tx:292 },
+    { n:'Jubilee Hills', cx:278, cy:278, fc:'#185FA5', tc:'#0C447C', ta:'start',  ty:273, tx:282 },
+    { n:'Mehdipatnam',   cx:235, cy:298, fc:'#3B6D11', tc:'#27500A', ta:'end',    ty:293, tx:231 },
+    { n:'Manikonda',     cx:178, cy:315, fc:'#854F0B', tc:'#633806', ta:'end',    ty:310, tx:174 },
+    { n:'Kokapet',       cx:188, cy:362, fc:'#854F0B', tc:'#633806', ta:'middle', ty:378, tx:188 },
+    { n:'Gachibowli',    cx:118, cy:345, fc:'#e00000', tc:'#8b0000', ta:'end',    ty:340, tx:114 },
+    { n:'Madhapur',      cx:162, cy:248, fc:'#e00000', tc:'#8b0000', ta:'end',    ty:243, tx:158 },
+    { n:'Hitech City',   cx:145, cy:225, fc:'#e00000', tc:'#8b0000', ta:'end',    ty:220, tx:141 },
+    { n:'Kondapur',      cx:158, cy:200, fc:'#e00000', tc:'#8b0000', ta:'middle', ty:192, tx:158 },
+    { n:'Miyapur',       cx:165, cy:172, fc:'#e00000', tc:'#8b0000', ta:'middle', ty:164, tx:165 },
+    { n:'Kukatpally',    cx:210, cy:178, fc:'#e00000', tc:'#8b0000', ta:'start',  ty:172, tx:214 },
+    { n:'Uppal',         cx:315, cy:228, fc:'#3B6D11', tc:'#27500A', ta:'start',  ty:223, tx:319 },
+    { n:'LB Nagar',      cx:345, cy:252, fc:'#3B6D11', tc:'#27500A', ta:'start',  ty:247, tx:349 },
+    { n:'Charminar',     cx:295, cy:318, fc:'#111111', tc:'#000000', ta:'start',  ty:313, tx:299 },
+    { n:'Falaknuma',     cx:270, cy:338, fc:'#111111', tc:'#000000', ta:'middle', ty:352, tx:270 },
+    { n:'Bachupally',    cx:262, cy:145, fc:'#e00000', tc:'#8b0000', ta:'start',  ty:140, tx:266 },
+  ];
+  return pins.map(p => `
+    <circle cx="${p.cx}" cy="${p.cy}" r="5" fill="${p.fc}" style="pointer-events:none"/>
+    <text x="${p.tx}" y="${p.ty}" text-anchor="${p.ta}" font-size="9" font-weight="500" fill="${p.tc}" style="pointer-events:none">${p.n}</text>
+  `).join('');
+}
+
+function societyDot(s) {
+  const map = { NW:{cx:145,cy:145}, NE:{cx:375,cy:145}, SW:{cx:145,cy:375}, SE:{cx:375,cy:375} };
+  if(!s.quadrant||!map[s.quadrant]) return '';
+  const jx = (s.id%40)-20, jy = ((s.id>>4)%40)-20;
+  return `<circle cx="${map[s.quadrant].cx+jx}" cy="${map[s.quadrant].cy+jy}" r="6" fill="${rentColor(s.rent)}" stroke="white" stroke-width="1.5" opacity="0.9" style="pointer-events:none"/>`;
+}
+
+// ── QUADRANT MAP ─────────────────────────────────────────────────────────────
+
+function renderQuadrantMap(q) {
+  const info  = QUADRANTS[q];
+  const qSocs = societies.filter(s => s.quadrant === q);
+
+  const pins = info.areas.map(a => {
+    const asSocs = qSocs.filter(s => s.area === a.name);
+    const badge  = asSocs.length > 0
+      ? `<circle cx="${a.cx}" cy="${a.cy-16}" r="9" fill="${rentColor(Math.min(...asSocs.map(x=>x.rent)))}" stroke="white" stroke-width="1.5"/>
+         <text x="${a.cx}" y="${a.cy-12}" text-anchor="middle" font-size="8" fill="white" font-weight="600">${asSocs.length}</text>`
+      : '';
+    return `<g class="area-pin" onclick="openModal('${a.name}')">
+      <circle cx="${a.cx}" cy="${a.cy}" r="8" fill="${a.fc}" stroke="white" stroke-width="2"/>
+      <text x="${a.cx}" y="${a.cy+20}" text-anchor="middle" font-size="11" font-weight="500" fill="${a.tc}">${a.name}</text>
+      ${badge}
+    </g>`;
+  }).join('');
+
+  const nLabel  = (q==='NW'||q==='NE') ? `<text x="240" y="14" text-anchor="middle" font-size="13" font-weight="500" fill="#2C2C2A" font-family="sans-serif">N</text>` : `<text x="240" y="476" text-anchor="middle" font-size="13" font-weight="500" fill="#2C2C2A" font-family="sans-serif">S</text>`;
+  const ewLabel = (q==='NW'||q==='SW') ? `<text x="10" y="244" text-anchor="middle" font-size="13" font-weight="500" fill="#2C2C2A" font-family="sans-serif">W</text>` : `<text x="472" y="244" text-anchor="middle" font-size="13" font-weight="500" fill="#2C2C2A" font-family="sans-serif">E</text>`;
+
+  document.getElementById('map-wrap').innerHTML = `
+  <svg viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg">
+    <rect x="20" y="20" width="440" height="440" rx="8" fill="${info.bg}" stroke="${info.color}" stroke-width="2"/>
+    ${nLabel}${ewLabel}
+    <text x="240" y="52" text-anchor="middle" font-size="15" font-weight="600" fill="${info.color}" font-family="sans-serif">${info.label}</text>
+    <line x1="20" x2="460" y1="240" y2="240" stroke="${info.color}" stroke-width="0.5" stroke-dasharray="4,4" opacity="0.4"/>
+    <line x1="240" y1="20" x2="240" y2="460" stroke="${info.color}" stroke-width="0.5" stroke-dasharray="4,4" opacity="0.4"/>
+    <g font-family="sans-serif">${pins}</g>
+  </svg>`;
+}
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+
+function rentColor(r) {
+  if(!r||r===0) return '#888780';
+  if(r<15000) return '#27ae60';
+  if(r<25000) return '#f39c12';
+  return '#c0392b';
+}
+
+// ── LIST ─────────────────────────────────────────────────────────────────────
+
+function renderList() {
+  const list = document.getElementById('society-list');
+  let filtered = currentView==='main' ? [...societies] : societies.filter(s=>s.quadrant===currentView);
+  filtered.sort((a,b) => a.rent - b.rent);
+
+  if(filtered.length===0) {
+    list.innerHTML = `<div class="empty-state">${currentView==='main'?'Tap a quadrant then add societies':'Tap an area pin to add a society'}</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(s => `
+    <div class="soc-card">
+      <div style="flex:1;min-width:0">
+        <div class="soc-name">${s.name}</div>
+        <div class="soc-area">${s.area} · ${s.furnish||''}</div>
+        <div style="margin-top:4px">
+          ${s.pricerange ? `<span class="soc-tag">${s.pricerange}</span>` : ''}
+          ${s.balcony    ? `<span class="soc-tag">Balcony: ${s.balcony}</span>` : ''}
+          ${s.sunlight   ? `<span class="soc-tag">${s.sunlight}</span>` : ''}
+        </div>
+        ${s.notes?`<div class="soc-area" style="margin-top:4px">${s.notes.substring(0,50)}${s.notes.length>50?'…':''}</div>`:''}
+      </div>
+      <div style="text-align:right;padding-left:10px;flex-shrink:0">
+        <div class="soc-price">${s.rent?'₹'+s.rent.toLocaleString():'–'}</div>
+        ${s.deposit?`<div class="soc-area">dep ₹${s.deposit.toLocaleString()}</div>`:''}
+        <div class="soc-del" onclick="deleteSociety(${s.id})">remove</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderQSummary() {
+  document.getElementById('q-summary').innerHTML = ['NW','NE','SW','SE'].map(q => {
+    const n = societies.filter(s=>s.quadrant===q).length;
+    return `<div class="q-card" onclick="tapQuadrant('${q}')">
+      <div class="q-label">${q}</div>
+      <div class="q-sub">${QUADRANTS[q].label.split(' ')[0]}</div>
+      <div class="q-sub">${n} societ${n===1?'y':'ies'}</div>
+    </div>`;
+  }).join('');
+}
+
+function tapQuadrant(q) {
+  showQuadrant(q);
+  switchTab('map');
+}
+
+// ── MODAL ────────────────────────────────────────────────────────────────────
+
+function openModal(area) {
+  document.getElementById('inp-area').value       = area||'';
+  document.getElementById('inp-name').value       = '';
+  document.getElementById('inp-rent').value       = '';
+  document.getElementById('inp-deposit').value    = '';
+  document.getElementById('inp-notes').value      = '';
+  document.getElementById('inp-pricerange').value = '';
+  document.getElementById('inp-balcony').value    = '';
+  document.getElementById('inp-sunlight').value   = '';
+  document.getElementById('sheet-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('inp-name').focus(),300);
+}
+
+function closeModal() {
+  document.getElementById('sheet-overlay').classList.remove('open');
+}
+
+function saveSociety() {
+  const name       = document.getElementById('inp-name').value.trim();
+  const area       = document.getElementById('inp-area').value.trim();
+  const rent       = parseInt(document.getElementById('inp-rent').value)||0;
+  const deposit    = parseInt(document.getElementById('inp-deposit').value)||0;
+  const furnish    = document.getElementById('inp-furnish').value;
+  const notes      = document.getElementById('inp-notes').value.trim();
+  const pricerange = document.getElementById('inp-pricerange').value;
+  const balcony    = document.getElementById('inp-balcony').value;
+  const sunlight   = document.getElementById('inp-sunlight').value;
+
+  if(!name||!area){ alert('Enter society name and area'); return; }
+  const quadrant = currentView!=='main' ? currentView : guessQuadrant(area);
+  societies.push({id:Date.now(),name,area,rent,deposit,furnish,notes,pricerange,balcony,sunlight,quadrant});
+  localStorage.setItem('hyd_societies',JSON.stringify(societies));
+  closeModal();
+  if(currentView==='main') renderMainMap();
+  else renderQuadrantMap(currentView);
+  renderList(); renderQSummary();
+}
+
+function guessQuadrant(area) {
+  for(const [q,info] of Object.entries(QUADRANTS)) {
+    if(info.areas.some(a=>a.name.toLowerCase()===area.toLowerCase())) return q;
+  }
+  return 'SW';
+}
+
+function deleteSociety(id) {
+  societies = societies.filter(s=>s.id!==id);
+  localStorage.setItem('hyd_societies',JSON.stringify(societies));
+  if(currentView==='main') renderMainMap();
+  else renderQuadrantMap(currentView);
+  renderList(); renderQSummary();
+}
+
+document.getElementById('sheet-overlay').addEventListener('click',function(e){
+  if(e.target===this) closeModal();
+});
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+showMain();
+switchTab('map');
+</script>
+</body>
+</html>
