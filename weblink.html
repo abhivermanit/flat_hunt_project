@@ -175,11 +175,36 @@ header h1 { font-size:15px; font-weight:500; }
     <input type="number" id="inp-rent" placeholder="e.g. 22000"/>
     <label>Deposit (₹)</label>
     <input type="number" id="inp-deposit" placeholder="e.g. 66000"/>
+    <label>Price range</label>
+    <select id="inp-pricerange">
+      <option value="">-- Select --</option>
+      <option>Under ₹15,000</option>
+      <option>₹15,000 – ₹20,000</option>
+      <option>₹20,000 – ₹25,000</option>
+      <option>₹25,000 – ₹30,000</option>
+      <option>₹30,000 – ₹40,000</option>
+      <option>Above ₹40,000</option>
+    </select>
     <label>Furnishing</label>
     <select id="inp-furnish">
       <option>Semi-furnished</option>
       <option>Fully furnished</option>
       <option>Unfurnished</option>
+    </select>
+    <label>Balcony</label>
+    <select id="inp-balcony">
+      <option value="">-- Select --</option>
+      <option>Yes</option>
+      <option>No</option>
+      <option>Yes — multiple</option>
+    </select>
+    <label>Sunlight</label>
+    <select id="inp-sunlight">
+      <option value="">-- Select --</option>
+      <option>Good — all day</option>
+      <option>Morning only</option>
+      <option>Evening only</option>
+      <option>Minimal</option>
     </select>
     <label>Notes</label>
     <textarea id="inp-notes" placeholder="Pros, cons, distance from office..."></textarea>
@@ -259,8 +284,17 @@ const QUADRANT_FILLS  = { NW:'#39ff1440', NE:'#dbe9f933', SW:'#39ff1440', SE:'#f
 
 // ── STATE ───────────────────────────────────────────────────────────────────
 
-let currentView = 'main'; // 'main' | 'NW' | 'NE' | 'SW' | 'SE'
-let societies   = JSON.parse(localStorage.getItem('hyd_societies') || '[]');
+let currentView = 'main';
+
+const DEFAULT_SOCIETIES = [
+  { id:1, name:'Bloomfield Elation Villas', area:'Khajaguda', rent:0, deposit:0, furnish:'Semi-furnished', notes:'', quadrant:'SW' },
+  { id:2, name:'Niharika Exotica',          area:'Khajaguda', rent:0, deposit:0, furnish:'Semi-furnished', notes:'', quadrant:'SW' },
+  { id:3, name:'Jains Carlton Creek',       area:'Khajaguda', rent:0, deposit:0, furnish:'Semi-furnished', notes:'', quadrant:'SW' },
+];
+
+let stored = JSON.parse(localStorage.getItem('hyd_societies') || 'null');
+if (!stored) { stored = DEFAULT_SOCIETIES; localStorage.setItem('hyd_societies', JSON.stringify(stored)); }
+let societies = stored;
 
 // ── ROUTER ──────────────────────────────────────────────────────────────────
 
@@ -487,6 +521,9 @@ function renderList() {
         <div style="flex:1;min-width:0">
           <div class="s-name">${s.name}</div>
           <div class="s-meta">${s.area} · ${s.furnish||''}</div>
+          ${s.pricerange ? `<div class="s-meta">Range: ${s.pricerange}</div>` : ''}
+          ${s.balcony    ? `<div class="s-meta">Balcony: ${s.balcony}</div>` : ''}
+          ${s.sunlight   ? `<div class="s-meta">Sunlight: ${s.sunlight}</div>` : ''}
           ${s.notes ? `<div class="s-meta">${s.notes.substring(0,38)}${s.notes.length>38?'…':''}</div>` : ''}
         </div>
         <div style="text-align:right;padding-left:8px">
@@ -519,11 +556,14 @@ function renderQSummary() {
 // ── MODAL ────────────────────────────────────────────────────────────────────
 
 function openModal(area) {
-  document.getElementById('inp-area').value    = area || '';
-  document.getElementById('inp-name').value    = '';
-  document.getElementById('inp-rent').value    = '';
-  document.getElementById('inp-deposit').value = '';
-  document.getElementById('inp-notes').value   = '';
+  document.getElementById('inp-area').value       = area || '';
+  document.getElementById('inp-name').value       = '';
+  document.getElementById('inp-rent').value       = '';
+  document.getElementById('inp-deposit').value    = '';
+  document.getElementById('inp-notes').value      = '';
+  document.getElementById('inp-pricerange').value = '';
+  document.getElementById('inp-balcony').value    = '';
+  document.getElementById('inp-sunlight').value   = '';
   document.getElementById('modal-overlay').classList.add('open');
   setTimeout(() => document.getElementById('inp-name').focus(), 100);
 }
@@ -533,18 +573,21 @@ function closeModal() {
 }
 
 function saveSociety() {
-  const name    = document.getElementById('inp-name').value.trim();
-  const area    = document.getElementById('inp-area').value.trim();
-  const rent    = parseInt(document.getElementById('inp-rent').value)    || 0;
-  const deposit = parseInt(document.getElementById('inp-deposit').value) || 0;
-  const furnish = document.getElementById('inp-furnish').value;
-  const notes   = document.getElementById('inp-notes').value.trim();
+  const name       = document.getElementById('inp-name').value.trim();
+  const area       = document.getElementById('inp-area').value.trim();
+  const rent       = parseInt(document.getElementById('inp-rent').value)    || 0;
+  const deposit    = parseInt(document.getElementById('inp-deposit').value) || 0;
+  const furnish    = document.getElementById('inp-furnish').value;
+  const notes      = document.getElementById('inp-notes').value.trim();
+  const pricerange = document.getElementById('inp-pricerange').value;
+  const balcony    = document.getElementById('inp-balcony').value;
+  const sunlight   = document.getElementById('inp-sunlight').value;
 
   if (!name || !area) { alert('Please enter society name and area.'); return; }
 
   const quadrant = currentView !== 'main' ? currentView : guessQuadrant(area);
 
-  societies.push({ id:Date.now(), name, area, rent, deposit, furnish, notes, quadrant });
+  societies.push({ id:Date.now(), name, area, rent, deposit, furnish, notes, pricerange, balcony, sunlight, quadrant });
   localStorage.setItem('hyd_societies', JSON.stringify(societies));
   closeModal();
 
