@@ -142,11 +142,11 @@ header h1 { font-size:15px; font-weight:500; }
 
     <div class="card" id="sidebar-legend">
       <h3>Zones</h3>
-      <div class="legend-item"><div class="legend-dot" style="background:#534AB7"></div>IT corridor</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e00000"></div>IT corridor</div>
       <div class="legend-item"><div class="legend-dot" style="background:#185FA5"></div>Central</div>
       <div class="legend-item"><div class="legend-dot" style="background:#854F0B"></div>West</div>
       <div class="legend-item"><div class="legend-dot" style="background:#3B6D11"></div>East / Mid</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#A32D2D"></div>Old city</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#111111"></div>Old city</div>
     </div>
 
     <div class="card" id="sidebar-quadrants" style="display:none">
@@ -195,35 +195,35 @@ header h1 { font-size:15px; font-weight:500; }
 
 const QUADRANTS = {
   NW: {
-    label:'North West', color:'#2d6a4f', bg:'#d8f3dc',
+    label:'North West', color:'#1a7a00', bg:'#ccff99',
     areas:[
-      { name:'Miyapur',     cx:120, cy:120, fc:'#534AB7', tc:'#3C3489' },
-      { name:'Kukatpally',  cx:200, cy:130, fc:'#534AB7', tc:'#3C3489' },
-      { name:'Kompally',    cx:300, cy: 90, fc:'#534AB7', tc:'#3C3489' },
-      { name:'Bachupally',  cx:270, cy:140, fc:'#534AB7', tc:'#3C3489' },
-      { name:'Kondapur',    cx:130, cy:200, fc:'#534AB7', tc:'#3C3489' },
-      { name:'Hitech City', cx: 90, cy:260, fc:'#534AB7', tc:'#3C3489' },
-      { name:'Madhapur',    cx:160, cy:310, fc:'#534AB7', tc:'#3C3489' },
-      { name:'Nallagandla', cx: 80, cy:360, fc:'#534AB7', tc:'#3C3489' },
+      { name:'Miyapur',     cx:120, cy:120, fc:'#e00000', tc:'#8b0000' },
+      { name:'Kukatpally',  cx:200, cy:130, fc:'#e00000', tc:'#8b0000' },
+      { name:'Kompally',    cx:300, cy: 90, fc:'#e00000', tc:'#8b0000' },
+      { name:'Bachupally',  cx:270, cy:140, fc:'#e00000', tc:'#8b0000' },
+      { name:'Kondapur',    cx:130, cy:200, fc:'#e00000', tc:'#8b0000' },
+      { name:'Hitech City', cx: 90, cy:260, fc:'#e00000', tc:'#8b0000' },
+      { name:'Madhapur',    cx:160, cy:310, fc:'#e00000', tc:'#8b0000' },
+      { name:'Nallagandla', cx: 80, cy:360, fc:'#e00000', tc:'#8b0000' },
     ]
   },
   NE: {
     label:'North East', color:'#1d3557', bg:'#dbe9f9',
     areas:[
-      { name:'Secunderabad', cx:180, cy:110, fc:'#534AB7', tc:'#3C3489' },
+      { name:'Secunderabad', cx:180, cy:110, fc:'#e00000', tc:'#8b0000' },
       { name:'Malkajgiri',   cx:310, cy:140, fc:'#3B6D11', tc:'#27500A' },
       { name:'Alwal',        cx:380, cy:180, fc:'#3B6D11', tc:'#27500A' },
-      { name:'Kompally',     cx:250, cy: 90, fc:'#534AB7', tc:'#3C3489' },
+      { name:'Kompally',     cx:250, cy: 90, fc:'#e00000', tc:'#8b0000' },
       { name:'Begumpet',     cx:130, cy:210, fc:'#185FA5', tc:'#0C447C' },
       { name:'Uppal',        cx:360, cy:260, fc:'#3B6D11', tc:'#27500A' },
       { name:'Ameerpet',     cx:120, cy:290, fc:'#185FA5', tc:'#0C447C' },
     ]
   },
   SW: {
-    label:'South West', color:'#7b2d00', bg:'#fde8d8',
+    label:'South West', color:'#1a7a00', bg:'#ccff99',
     areas:[
-      { name:'Gachibowli',      cx: 90, cy:120, fc:'#534AB7', tc:'#3C3489' },
-      { name:'Nallagandla',     cx: 70, cy:200, fc:'#534AB7', tc:'#3C3489' },
+      { name:'Gachibowli',      cx: 90, cy:120, fc:'#e00000', tc:'#8b0000' },
+      { name:'Nallagandla',     cx: 70, cy:200, fc:'#e00000', tc:'#8b0000' },
       { name:'Financial Dist',  cx:140, cy:160, fc:'#854F0B', tc:'#633806' },
       { name:'Nanakramguda',    cx:200, cy:120, fc:'#854F0B', tc:'#633806' },
       { name:'Manikonda',       cx:200, cy:210, fc:'#854F0B', tc:'#633806' },
@@ -232,6 +232,10 @@ const QUADRANTS = {
       { name:'Tolichowki',      cx:280, cy:160, fc:'#3B6D11', tc:'#27500A' },
       { name:'Mehdipatnam',     cx:310, cy:230, fc:'#3B6D11', tc:'#27500A' },
       { name:'Masab Tank',      cx:350, cy:160, fc:'#3B6D11', tc:'#27500A' },
+      { name:'Khajaguda',       cx:110, cy:340, fc:'#854F0B', tc:'#633806' },
+      { name:'Masjid Banda',    cx:240, cy:340, fc:'#854F0B', tc:'#633806' },
+      { name:'Narsingi',        cx: 80, cy:400, fc:'#854F0B', tc:'#633806' },
+      { name:'Gowlidoddy',      cx:310, cy:300, fc:'#3B6D11', tc:'#27500A' },
     ]
   },
   SE: {
@@ -243,15 +247,15 @@ const QUADRANTS = {
       { name:'LB Nagar',       cx:380, cy:160, fc:'#3B6D11', tc:'#27500A' },
       { name:'Dilsukhnagar',   cx:360, cy:230, fc:'#3B6D11', tc:'#27500A' },
       { name:'Uppal',          cx:360, cy:120, fc:'#3B6D11', tc:'#27500A' },
-      { name:'Charminar',      cx:300, cy:300, fc:'#A32D2D', tc:'#791F1F' },
-      { name:'Falaknuma',      cx:270, cy:370, fc:'#A32D2D', tc:'#791F1F' },
+      { name:'Charminar',      cx:300, cy:300, fc:'#111111', tc:'#000000' },
+      { name:'Falaknuma',      cx:270, cy:370, fc:'#111111', tc:'#000000' },
       { name:'Mehdipatnam',    cx:160, cy:260, fc:'#3B6D11', tc:'#27500A' },
     ]
   }
 };
 
-const QUADRANT_COLORS = { NW:'#2d6a4f', NE:'#1d3557', SW:'#7b2d00', SE:'#6b2737' };
-const QUADRANT_FILLS  = { NW:'#d8f3dc33', NE:'#dbe9f933', SW:'#fde8d833', SE:'#fde8ec33' };
+const QUADRANT_COLORS = { NW:'#39ff14', NE:'#1d3557', SW:'#39ff14', SE:'#6b2737' };
+const QUADRANT_FILLS  = { NW:'#39ff1440', NE:'#dbe9f933', SW:'#39ff1440', SE:'#fde8ec33' };
 
 // ── STATE ───────────────────────────────────────────────────────────────────
 
@@ -339,11 +343,11 @@ function renderMainMap() {
     <!-- Legend -->
     <g font-family="sans-serif" font-size="10">
       <rect x="358" y="388" width="122" height="98" rx="5" fill="white" stroke="#ccc" stroke-width="0.5"/>
-      <circle cx="372" cy="402" r="4" fill="#534AB7"/><text x="382" y="406" fill="#3C3489">IT corridor</text>
+      <circle cx="372" cy="402" r="4" fill="#e00000"/><text x="382" y="406" fill="#8b0000">IT corridor</text>
       <circle cx="372" cy="420" r="4" fill="#185FA5"/><text x="382" y="424" fill="#0C447C">Central</text>
       <circle cx="372" cy="438" r="4" fill="#854F0B"/><text x="382" y="442" fill="#633806">West</text>
       <circle cx="372" cy="456" r="4" fill="#3B6D11"/><text x="382" y="460" fill="#27500A">East / Mid</text>
-      <circle cx="372" cy="474" r="4" fill="#A32D2D"/><text x="382" y="478" fill="#791F1F">Old city</text>
+      <circle cx="372" cy="474" r="4" fill="#111111"/><text x="382" y="478" fill="#000000">Old city</text>
     </g>
 
   </svg>`;
@@ -353,7 +357,7 @@ function renderMainMap() {
 
 function mainPins() {
   const pins = [
-    { n:'Secunderabad', cx:262, cy:218, fc:'#534AB7', tc:'#3C3489', ta:'middle', ty:210 },
+    { n:'Secunderabad', cx:262, cy:218, fc:'#e00000', tc:'#8b0000', ta:'middle', ty:210 },
     { n:'Begumpet',     cx:232, cy:238, fc:'#185FA5', tc:'#0C447C', ta:'end',    ty:232, tx:228 },
     { n:'Ameerpet',     cx:232, cy:258, fc:'#185FA5', tc:'#0C447C', ta:'end',    ty:253, tx:228 },
     { n:'Somajiguda',   cx:245, cy:278, fc:'#185FA5', tc:'#0C447C', ta:'end',    ty:273, tx:241 },
@@ -367,20 +371,20 @@ function mainPins() {
     { n:'Kokapet',      cx:188, cy:362, fc:'#854F0B', tc:'#633806', ta:'middle', ty:378, tx:188 },
     { n:'Nanakramguda', cx:145, cy:290, fc:'#854F0B', tc:'#633806', ta:'end',    ty:285, tx:141 },
     { n:'Financial Dist',cx:128,cy:318, fc:'#854F0B', tc:'#633806', ta:'end',    ty:313, tx:124 },
-    { n:'Gachibowli',   cx:118, cy:345, fc:'#534AB7', tc:'#3C3489', ta:'end',    ty:340, tx:114 },
-    { n:'Nallagandla',  cx:108, cy:372, fc:'#534AB7', tc:'#3C3489', ta:'end',    ty:367, tx:104 },
-    { n:'Madhapur',     cx:162, cy:248, fc:'#534AB7', tc:'#3C3489', ta:'end',    ty:243, tx:158 },
-    { n:'Hitech City',  cx:145, cy:225, fc:'#534AB7', tc:'#3C3489', ta:'end',    ty:220, tx:141 },
-    { n:'Kondapur',     cx:158, cy:200, fc:'#534AB7', tc:'#3C3489', ta:'middle', ty:192, tx:158 },
-    { n:'Miyapur',      cx:165, cy:172, fc:'#534AB7', tc:'#3C3489', ta:'middle', ty:164, tx:165 },
-    { n:'Kukatpally',   cx:210, cy:178, fc:'#534AB7', tc:'#3C3489', ta:'start',  ty:172, tx:214 },
-    { n:'Kompally',     cx:248, cy:165, fc:'#534AB7', tc:'#3C3489', ta:'start',  ty:160, tx:252 },
+    { n:'Gachibowli',   cx:118, cy:345, fc:'#e00000', tc:'#8b0000', ta:'end',    ty:340, tx:114 },
+    { n:'Nallagandla',  cx:108, cy:372, fc:'#e00000', tc:'#8b0000', ta:'end',    ty:367, tx:104 },
+    { n:'Madhapur',     cx:162, cy:248, fc:'#e00000', tc:'#8b0000', ta:'end',    ty:243, tx:158 },
+    { n:'Hitech City',  cx:145, cy:225, fc:'#e00000', tc:'#8b0000', ta:'end',    ty:220, tx:141 },
+    { n:'Kondapur',     cx:158, cy:200, fc:'#e00000', tc:'#8b0000', ta:'middle', ty:192, tx:158 },
+    { n:'Miyapur',      cx:165, cy:172, fc:'#e00000', tc:'#8b0000', ta:'middle', ty:164, tx:165 },
+    { n:'Kukatpally',   cx:210, cy:178, fc:'#e00000', tc:'#8b0000', ta:'start',  ty:172, tx:214 },
+    { n:'Kompally',     cx:248, cy:165, fc:'#e00000', tc:'#8b0000', ta:'start',  ty:160, tx:252 },
     { n:'Uppal',        cx:315, cy:228, fc:'#3B6D11', tc:'#27500A', ta:'start',  ty:223, tx:319 },
     { n:'LB Nagar',     cx:345, cy:252, fc:'#3B6D11', tc:'#27500A', ta:'start',  ty:247, tx:349 },
     { n:'Dilsukhnagar', cx:338, cy:278, fc:'#3B6D11', tc:'#27500A', ta:'start',  ty:273, tx:342 },
-    { n:'Charminar',    cx:295, cy:318, fc:'#A32D2D', tc:'#791F1F', ta:'start',  ty:313, tx:299 },
-    { n:'Falaknuma',    cx:270, cy:338, fc:'#A32D2D', tc:'#791F1F', ta:'middle', ty:352, tx:270 },
-    { n:'Bachupally',   cx:262, cy:145, fc:'#534AB7', tc:'#3C3489', ta:'start',  ty:140, tx:266 },
+    { n:'Charminar',    cx:295, cy:318, fc:'#111111', tc:'#000000', ta:'start',  ty:313, tx:299 },
+    { n:'Falaknuma',    cx:270, cy:338, fc:'#111111', tc:'#000000', ta:'middle', ty:352, tx:270 },
+    { n:'Bachupally',   cx:262, cy:145, fc:'#e00000', tc:'#8b0000', ta:'start',  ty:140, tx:266 },
     { n:'Malkajgiri',   cx:318, cy:168, fc:'#3B6D11', tc:'#27500A', ta:'start',  ty:163, tx:322 },
     { n:'Alwal',        cx:355, cy:198, fc:'#3B6D11', tc:'#27500A', ta:'start',  ty:193, tx:359 },
   ];
