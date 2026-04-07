@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Hyderabad — 2BHK Rental Map</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',sans-serif; background:#f4f6f9; color:#2c2c2a; }
+
+header {
+  background:#0C447C; color:white;
+  padding:12px 24px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+header h1 { font-size:15px; font-weight:500; }
+.header-right { display:flex; align-items:center; gap:12px; }
+#back-btn {
+  display:none; background:rgba(255,255,255,0.15);
+  border:0.5px solid rgba(255,255,255,0.3);
+  color:white; border-radius:6px;
+  padding:5px 12px; font-size:12px; cursor:pointer;
+}
+#back-btn:hover { background:rgba(255,255,255,0.25); }
+#page-label { font-size:12px; opacity:0.7; }
+
+.container {
+  display:flex; gap:16px; padding:16px;
+  max-width:1100px; margin:0 auto;
+}
+
+.map-wrap {
+  flex:1; background:white;
+  border:0.5px solid #ddd; border-radius:10px; padding:12px;
+}
+.map-wrap svg { width:100%; height:auto; display:block; }
+
+.sidebar {
+  width:270px; display:flex; flex-direction:column; gap:12px;
+}
+.card {
+  background:white; border:0.5px solid #ddd;
+  border-radius:10px; padding:14px;
+}
+.card h3 {
+  font-size:11px; font-weight:500; color:#888;
+  text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px;
+}
+
+.legend-item { display:flex; align-items:center; gap:8px; font-size:12px; color:#444; margin-bottom:6px; }
+.legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+.quadrant-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.q-btn {
+  background:#f0f4f8; border:0.5px solid #d0dae6;
+  border-radius:8px; padding:10px 8px;
+  font-size:12px; font-weight:500; color:#0C447C;
+  cursor:pointer; text-align:center; line-height:1.4;
+}
+.q-btn:hover { background:#ddeaf5; }
+.q-btn .q-count { font-size:10px; font-weight:400; color:#888; margin-top:2px; }
+
+.society-list { max-height:300px; overflow-y:auto; }
+.society-item {
+  padding:8px 10px; border-radius:6px; font-size:12px;
+  margin-bottom:4px; border:0.5px solid #eee;
+  display:flex; justify-content:space-between; align-items:flex-start;
+}
+.s-name { font-weight:500; color:#2c2c2a; }
+.s-meta { color:#888; font-size:11px; }
+.s-price { color:#185FA5; font-weight:500; white-space:nowrap; }
+.s-del { color:#c00; font-size:11px; cursor:pointer; }
+
+.empty-state { font-size:12px; color:#aaa; text-align:center; padding:20px 0; }
+
+.add-btn {
+  background:#0C447C; color:white; border:none;
+  border-radius:8px; padding:10px 16px;
+  font-size:13px; cursor:pointer; width:100%;
+}
+.add-btn:hover { background:#185FA5; }
+
+/* price badge dots on main map */
+.society-dot { pointer-events:none; }
+
+/* quadrant hover overlay */
+.q-overlay { cursor:pointer; opacity:0; transition:opacity 0.15s; }
+.q-overlay:hover { opacity:1; }
+
+/* area pin */
+.area-pin { cursor:pointer; }
+
+/* Modal */
+.modal-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.35); z-index:100;
+  align-items:center; justify-content:center;
+}
+.modal-overlay.open { display:flex; }
+.modal {
+  background:white; border-radius:12px;
+  padding:24px; width:340px; max-width:95vw;
+}
+.modal h2 { font-size:15px; font-weight:500; margin-bottom:16px; }
+.modal label { font-size:12px; color:#666; display:block; margin-bottom:4px; margin-top:10px; }
+.modal input,.modal select,.modal textarea {
+  width:100%; padding:8px 10px;
+  border:0.5px solid #ccc; border-radius:6px;
+  font-size:13px; font-family:inherit;
+}
+.modal textarea { resize:vertical; height:60px; }
+.modal-actions { display:flex; gap:8px; margin-top:16px; }
+.btn-save {
+  background:#0C447C; color:white; border:none;
+  border-radius:6px; padding:8px 16px; font-size:13px; cursor:pointer; flex:1;
+}
+.btn-cancel {
+  background:white; color:#444; border:0.5px solid #ccc;
+  border-radius:6px; padding:8px 16px; font-size:13px; cursor:pointer; flex:1;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="page-title">Hyderabad — 2BHK Rental Map</h1>
+  <div class="header-right">
+    <span id="page-label">Click a quadrant to explore</span>
+    <button id="back-btn" onclick="showMain()">← Back to full map</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- MAP AREA -->
+  <div class="map-wrap" id="map-wrap">
+    <!-- injected by JS -->
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div class="card" id="sidebar-legend">
+      <h3>Zones</h3>
+      <div class="legend-item"><div class="legend-dot" style="background:#534AB7"></div>IT corridor</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#185FA5"></div>Central</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#854F0B"></div>West</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#3B6D11"></div>East / Mid</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#A32D2D"></div>Old city</div>
+    </div>
+
+    <div class="card" id="sidebar-quadrants" style="display:none">
+      <h3>All quadrants</h3>
+      <div class="quadrant-grid" id="q-summary"></div>
+    </div>
+
+    <div class="card">
+      <h3 id="list-title">Societies</h3>
+      <div class="society-list" id="society-list"></div>
+    </div>
+
+    <button class="add-btn" id="add-btn" onclick="openModal('')">+ Add society</button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h2 id="modal-title">Add society</h2>
+    <label>Society name</label>
+    <input type="text" id="inp-name" placeholder="e.g. Aparna Serene Park"/>
+    <label>Area</label>
+    <input type="text" id="inp-area" placeholder="e.g. Kondapur"/>
+    <label>Monthly rent (₹)</label>
+    <input type="number" id="inp-rent" placeholder="e.g. 22000"/>
+    <label>Deposit (₹)</label>
+    <input type="number" id="inp-deposit" placeholder="e.g. 66000"/>
+    <label>Furnishing</label>
+    <select id="inp-furnish">
+      <option>Semi-furnished</option>
+      <option>Fully furnished</option>
+      <option>Unfurnished</option>
+    </select>
+    <label>Notes</label>
+    <textarea id="inp-notes" placeholder="Pros, cons, distance from office..."></textarea>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveSociety()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ────────────────────────────────────────────────────────────────────
+
+const QUADRANTS = {
+  NW: {
+    label:'North West', color:'#2d6a4f', bg:'#d8f3dc',
+    areas:[
+      { name:'Miyapur',     cx:120, cy:120, fc:'#534AB7', tc:'#3C3489' },
+      { name:'Kukatpally',  cx:200, cy:130, fc:'#534AB7', tc:'#3C3489' },
+      { name:'Kompally',    cx:300, cy: 90, fc:'#534AB7', tc:'#3C3489' },
+      { name:'Bachupally',  cx:270, cy:140, fc:'#534AB7', tc:'#3C3489' },
+      { name:'Kondapur',    cx:130, cy:200, fc:'#534AB7', tc:'#3C3489' },
+      { name:'Hitech City', cx: 90, cy:260, fc:'#534AB7', tc:'#3C3489' },
+      { name:'Madhapur',    cx:160, cy:310, fc:'#534AB7', tc:'#3C3489' },
+      { name:'Nallagandla', cx: 80, cy:360, fc:'#534AB7', tc:'#3C3489' },
+    ]
+  },
+  NE: {
+    label:'North East', color:'#1d3557', bg:'#dbe9f9',
+    areas:[
+      { name:'Secunderabad', cx:180, cy:110, fc:'#534AB7', tc:'#3C3489' },
+      { name:'Malkajgiri',   cx:310, cy:140, fc:'#3B6D11', tc:'#27500A' },
+      { name:'Alwal',        cx:380, cy:180, fc:'#3B6D11', tc:'#27500A' },
+      { name:'Kompally',     cx:250, cy: 90, fc:'#534AB7', tc:'#3C3489' },
+      { name:'Begumpet',     cx:130, cy:210, fc:'#185FA5', tc:'#0C447C' },
+      { name:'Uppal',        cx:360, cy:260, fc:'#3B6D11', tc:'#27500A' },
+      { name:'Ameerpet',     cx:120, cy:290, fc:'#185FA5', tc:'#0C447C' },
+    ]
+  },
+  SW: {
+    label:'South West', color:'#7b2d00', bg:'#fde8d8',
+    areas:[
+      { name:'Gachibowli',      cx: 90, cy:120, fc:'#534AB7', tc:'#3C3489' },
+      { name:'Nallagandla',     cx: 70, cy:200, fc:'#534AB7', tc:'#3C3489' },
+      { name:'Financial Dist',  cx:140, cy:160, fc:'#854F0B', tc:'#633806' },
+      { name:'Nanakramguda',    cx:200, cy:120, fc:'#854F0B', tc:'#633806' },
+      { name:'Manikonda',       cx:200, cy:210, fc:'#854F0B', tc:'#633806' },
+      { name:'Kokapet',         cx:180, cy:300, fc:'#854F0B', tc:'#633806' },
+      { name:'Puppalaguda',     cx:130, cy:280, fc:'#854F0B', tc:'#633806' },
+      { name:'Tolichowki',      cx:280, cy:160, fc:'#3B6D11', tc:'#27500A' },
+      { name:'Mehdipatnam',     cx:310, cy:230, fc:'#3B6D11', tc:'#27500A' },
+      { name:'Masab Tank',      cx:350, cy:160, fc:'#3B6D11', tc:'#27500A' },
+    ]
+  },
+  SE: {
+    label:'South East', color:'#6b2737', bg:'#fde8ec',
+    areas:[
+      { name:'Banjara Hills',  cx:120, cy:120, fc:'#185FA5', tc:'#0C447C' },
+      { name:'Jubilee Hills',  cx:180, cy:170, fc:'#185FA5', tc:'#0C447C' },
+      { name:'Somajiguda',     cx: 90, cy:200, fc:'#185FA5', tc:'#0C447C' },
+      { name:'LB Nagar',       cx:380, cy:160, fc:'#3B6D11', tc:'#27500A' },
+      { name:'Dilsukhnagar',   cx:360, cy:230, fc:'#3B6D11', tc:'#27500A' },
+      { name:'Uppal',          cx:360, cy:120, fc:'#3B6D11', tc:'#27500A' },
+      { name:'Charminar',      cx:300, cy:300, fc:'#A32D2D', tc:'#791F1F' },
+      { name:'Falaknuma',      cx:270, cy:370, fc:'#A32D2D', tc:'#791F1F' },
+      { name:'Mehdipatnam',    cx:160, cy:260, fc:'#3B6D11', tc:'#27500A' },
+    ]
+  }
+};
+
+const QUADRANT_COLORS = { NW:'#2d6a4f', NE:'#1d3557', SW:'#7b2d00', SE:'#6b2737' };
+const QUADRANT_FILLS  = { NW:'#d8f3dc33', NE:'#dbe9f933', SW:'#fde8d833', SE:'#fde8ec33' };
+
+// ── STATE ───────────────────────────────────────────────────────────────────
+
+let currentView = 'main'; // 'main' | 'NW' | 'NE' | 'SW' | 'SE'
+let societies   = JSON.parse(localStorage.getItem('hyd_societies') || '[]');
+
+// ── ROUTER ──────────────────────────────────────────────────────────────────
+
+function showMain() {
+  currentView = 'main';
+  document.getElementById('back-btn').style.display   = 'none';
+  document.getElementById('sidebar-legend').style.display    = '';
+  document.getElementById('sidebar-quadrants').style.display = 'none';
+  document.getElementById('page-label').textContent   = 'Click a quadrant to explore';
+  document.getElementById('page-title').textContent   = 'Hyderabad — 2BHK Rental Map';
+  document.getElementById('list-title').textContent   = 'All societies';
+  document.getElementById('add-btn').onclick = () => openModal('');
+  renderMainMap();
+  renderList();
+}
+
+function showQuadrant(q) {
+  currentView = q;
+  const info = QUADRANTS[q];
+  document.getElementById('back-btn').style.display   = '';
+  document.getElementById('sidebar-legend').style.display    = 'none';
+  document.getElementById('sidebar-quadrants').style.display = '';
+  document.getElementById('page-label').textContent   = info.label + ' quadrant';
+  document.getElementById('page-title').textContent   = 'Hyderabad — ' + info.label;
+  document.getElementById('list-title').textContent   = info.label + ' societies';
+  document.getElementById('add-btn').onclick = () => openModal('');
+  renderQuadrantMap(q);
+  renderQSummary();
+  renderList();
+}
+
+// ── MAIN MAP SVG ─────────────────────────────────────────────────────────────
+
+function renderMainMap() {
+  const socs = societies;
+
+  // Count per quadrant for badge
+  const counts = { NW:0, NE:0, SW:0, SE:0 };
+  socs.forEach(s => { if(s.quadrant) counts[s.quadrant]++; });
+
+  const svg = `
+  <svg viewBox="0 0 520 520" xmlns="http://www.w3.org/2000/svg">
+
+    <rect x="30" y="30" width="460" height="460" rx="4" fill="#ddeaf5" stroke="#a0b8d0" stroke-width="0.5"/>
+
+    <!-- NSEW -->
+    <text x="260" y="22"  text-anchor="middle" font-size="13" font-weight="500" fill="#2C2C2A" font-family="sans-serif">N</text>
+    <text x="260" y="510" text-anchor="middle" font-size="13" font-weight="500" fill="#2C2C2A" font-family="sans-serif">S</text>
+    <text x="15"  y="264" text-anchor="middle" font-size="13" font-weight="500" fill="#2C2C2A" font-family="sans-serif">W</text>
+    <text x="507" y="264" text-anchor="middle" font-size="13" font-weight="500" fill="#2C2C2A" font-family="sans-serif">E</text>
+
+    <!-- Quadrant clickable overlays -->
+    <rect class="q-overlay" x="30"  y="30"  width="230" height="230" rx="4" fill="${QUADRANT_FILLS.NW}" stroke="${QUADRANT_COLORS.NW}" stroke-width="1.5" onclick="showQuadrant('NW')" style="cursor:pointer"/>
+    <rect class="q-overlay" x="260" y="30"  width="230" height="230" rx="4" fill="${QUADRANT_FILLS.NE}" stroke="${QUADRANT_COLORS.NE}" stroke-width="1.5" onclick="showQuadrant('NE')" style="cursor:pointer"/>
+    <rect class="q-overlay" x="30"  y="260" width="230" height="230" rx="4" fill="${QUADRANT_FILLS.SW}" stroke="${QUADRANT_COLORS.SW}" stroke-width="1.5" onclick="showQuadrant('SW')" style="cursor:pointer"/>
+    <rect class="q-overlay" x="260" y="260" width="230" height="230" rx="4" fill="${QUADRANT_FILLS.SE}" stroke="${QUADRANT_COLORS.SE}" stroke-width="1.5" onclick="showQuadrant('SE')" style="cursor:pointer"/>
+
+    <!-- Quadrant labels -->
+    <text x="80"  y="58"  font-size="11" font-weight="500" fill="${QUADRANT_COLORS.NW}" font-family="sans-serif" style="pointer-events:none">NW · ${counts.NW} ${counts.NW===1?'society':'societies'}</text>
+    <text x="295" y="58"  font-size="11" font-weight="500" fill="${QUADRANT_COLORS.NE}" font-family="sans-serif" style="pointer-events:none">NE · ${counts.NE} ${counts.NE===1?'society':'societies'}</text>
+    <text x="80"  y="288" font-size="11" font-weight="500" fill="${QUADRANT_COLORS.SW}" font-family="sans-serif" style="pointer-events:none">SW · ${counts.SW} ${counts.SW===1?'society':'societies'}</text>
+    <text x="295" y="288" font-size="11" font-weight="500" fill="${QUADRANT_COLORS.SE}" font-family="sans-serif" style="pointer-events:none">SE · ${counts.SE} ${counts.SE===1?'society':'societies'}</text>
+
+    <!-- Dividers -->
+    <line x1="260" y1="30" x2="260" y2="490" stroke="#90aac8" stroke-width="1" stroke-dasharray="5,4"/>
+    <line x1="30"  y1="260" x2="490" y2="260" stroke="#90aac8" stroke-width="1" stroke-dasharray="5,4"/>
+
+    <!-- Lake -->
+    <path d="M200,215 Q230,200 260,205 Q285,198 310,208 Q335,205 355,220 Q368,238 365,258 Q368,278 355,298 Q338,318 315,328 Q290,338 262,335 Q235,338 210,328 Q188,315 178,295 Q168,275 170,255 Q170,232 200,215Z" fill="#c0d8ee" stroke="#90b0cc" stroke-width="0.5"/>
+    <text x="262" y="272" text-anchor="middle" font-size="8" fill="#5F5E5A" font-family="sans-serif">Hussain Sagar</text>
+
+    <!-- Area pins -->
+    <g font-family="sans-serif">
+      ${mainPins()}
+    </g>
+
+    <!-- Society dots on main map -->
+    ${socs.map(s => societyDotMain(s)).join('')}
+
+    <!-- Legend -->
+    <g font-family="sans-serif" font-size="10">
+      <rect x="358" y="388" width="122" height="98" rx="5" fill="white" stroke="#ccc" stroke-width="0.5"/>
+      <circle cx="372" cy="402" r="4" fill="#534AB7"/><text x="382" y="406" fill="#3C3489">IT corridor</text>
+      <circle cx="372" cy="420" r="4" fill="#185FA5"/><text x="382" y="424" fill="#0C447C">Central</text>
+      <circle cx="372" cy="438" r="4" fill="#854F0B"/><text x="382" y="442" fill="#633806">West</text>
+      <circle cx="372" cy="456" r="4" fill="#3B6D11"/><text x="382" y="460" fill="#27500A">East / Mid</text>
+      <circle cx="372" cy="474" r="4" fill="#A32D2D"/><text x="382" y="478" fill="#791F1F">Old city</text>
+    </g>
+
+  </svg>`;
+
+  document.getElementById('map-wrap').innerHTML = svg;
+}
+
+function mainPins() {
+  const pins = [
+    { n:'Secunderabad', cx:262, cy:218, fc:'#534AB7', tc:'#3C3489', ta:'middle', ty:210 },
+    { n:'Begumpet',     cx:232, cy:238, fc:'#185FA5', tc:'#0C447C', ta:'end',    ty:232, tx:228 },
+    { n:'Ameerpet',     cx:232, cy:258, fc:'#185FA5', tc:'#0C447C', ta:'end',    ty:253, tx:228 },
+    { n:'Somajiguda',   cx:245, cy:278, fc:'#185FA5', tc:'#0C447C', ta:'end',    ty:273, tx:241 },
+    { n:'Banjara Hills',cx:288, cy:258, fc:'#185FA5', tc:'#0C447C', ta:'start',  ty:253, tx:292 },
+    { n:'Jubilee Hills',cx:278, cy:278, fc:'#185FA5', tc:'#0C447C', ta:'start',  ty:273, tx:282 },
+    { n:'Mehdipatnam',  cx:235, cy:298, fc:'#3B6D11', tc:'#27500A', ta:'end',    ty:293, tx:231 },
+    { n:'Tolichowki',   cx:198, cy:288, fc:'#3B6D11', tc:'#27500A', ta:'end',    ty:283, tx:194 },
+    { n:'Masab Tank',   cx:168, cy:268, fc:'#3B6D11', tc:'#27500A', ta:'end',    ty:263, tx:164 },
+    { n:'Manikonda',    cx:178, cy:315, fc:'#854F0B', tc:'#633806', ta:'end',    ty:310, tx:174 },
+    { n:'Puppalaguda',  cx:155, cy:345, fc:'#854F0B', tc:'#633806', ta:'end',    ty:340, tx:151 },
+    { n:'Kokapet',      cx:188, cy:362, fc:'#854F0B', tc:'#633806', ta:'middle', ty:378, tx:188 },
+    { n:'Nanakramguda', cx:145, cy:290, fc:'#854F0B', tc:'#633806', ta:'end',    ty:285, tx:141 },
+    { n:'Financial Dist',cx:128,cy:318, fc:'#854F0B', tc:'#633806', ta:'end',    ty:313, tx:124 },
+    { n:'Gachibowli',   cx:118, cy:345, fc:'#534AB7', tc:'#3C3489', ta:'end',    ty:340, tx:114 },
+    { n:'Nallagandla',  cx:108, cy:372, fc:'#534AB7', tc:'#3C3489', ta:'end',    ty:367, tx:104 },
+    { n:'Madhapur',     cx:162, cy:248, fc:'#534AB7', tc:'#3C3489', ta:'end',    ty:243, tx:158 },
+    { n:'Hitech City',  cx:145, cy:225, fc:'#534AB7', tc:'#3C3489', ta:'end',    ty:220, tx:141 },
+    { n:'Kondapur',     cx:158, cy:200, fc:'#534AB7', tc:'#3C3489', ta:'middle', ty:192, tx:158 },
+    { n:'Miyapur',      cx:165, cy:172, fc:'#534AB7', tc:'#3C3489', ta:'middle', ty:164, tx:165 },
+    { n:'Kukatpally',   cx:210, cy:178, fc:'#534AB7', tc:'#3C3489', ta:'start',  ty:172, tx:214 },
+    { n:'Kompally',     cx:248, cy:165, fc:'#534AB7', tc:'#3C3489', ta:'start',  ty:160, tx:252 },
+    { n:'Uppal',        cx:315, cy:228, fc:'#3B6D11', tc:'#27500A', ta:'start',  ty:223, tx:319 },
+    { n:'LB Nagar',     cx:345, cy:252, fc:'#3B6D11', tc:'#27500A', ta:'start',  ty:247, tx:349 },
+    { n:'Dilsukhnagar', cx:338, cy:278, fc:'#3B6D11', tc:'#27500A', ta:'start',  ty:273, tx:342 },
+    { n:'Charminar',    cx:295, cy:318, fc:'#A32D2D', tc:'#791F1F', ta:'start',  ty:313, tx:299 },
+    { n:'Falaknuma',    cx:270, cy:338, fc:'#A32D2D', tc:'#791F1F', ta:'middle', ty:352, tx:270 },
+    { n:'Bachupally',   cx:262, cy:145, fc:'#534AB7', tc:'#3C3489', ta:'start',  ty:140, tx:266 },
+    { n:'Malkajgiri',   cx:318, cy:168, fc:'#3B6D11', tc:'#27500A', ta:'start',  ty:163, tx:322 },
+    { n:'Alwal',        cx:355, cy:198, fc:'#3B6D11', tc:'#27500A', ta:'start',  ty:193, tx:359 },
+  ];
+  return pins.map(p => `
+    <circle cx="${p.cx}" cy="${p.cy}" r="4" fill="${p.fc}" style="pointer-events:none"/>
+    <text x="${p.tx||p.cx}" y="${p.ty}" text-anchor="${p.ta||'middle'}" font-size="9" font-weight="500" fill="${p.tc}" style="pointer-events:none">${p.n}</text>
+  `).join('');
+}
+
+function societyDotMain(s) {
+  const map = {
+    NW:{ cx:145, cy:145 }, NE:{ cx:375, cy:145 },
+    SW:{ cx:145, cy:375 }, SE:{ cx:375, cy:375 }
+  };
+  if(!s.quadrant || !map[s.quadrant]) return '';
+  const clr = rentColor(s.rent);
+  return `<circle class="society-dot" cx="${map[s.quadrant].cx + Math.random()*40-20}" cy="${map[s.quadrant].cy + Math.random()*40-20}" r="5" fill="${clr}" stroke="white" stroke-width="1" opacity="0.85"/>`;
+}
+
+// ── QUADRANT MAP SVG ─────────────────────────────────────────────────────────
+
+function renderQuadrantMap(q) {
+  const info = QUADRANTS[q];
+  const qSocs = societies.filter(s => s.quadrant === q);
+
+  const areaPins = info.areas.map(a => {
+    const asSocs = qSocs.filter(s => s.area === a.name);
+    const dot = asSocs.length > 0
+      ? `<circle cx="${a.cx}" cy="${a.cy-14}" r="8" fill="${rentColor(Math.min(...asSocs.map(x=>x.rent)))}" stroke="white" stroke-width="1.5"/>
+         <text x="${a.cx}" y="${a.cy-10}" text-anchor="middle" font-size="7" fill="white" font-weight="500">${asSocs.length}</text>`
+      : '';
+    return `
+      <g class="area-pin" onclick="openModal('${a.name}')" style="cursor:pointer">
+        <circle cx="${a.cx}" cy="${a.cy}" r="6" fill="${a.fc}" stroke="white" stroke-width="1.5"/>
+        <text x="${a.cx}" y="${a.cy+18}" text-anchor="middle" font-size="10" font-weight="500" fill="${a.tc}">${a.name}</text>
+        ${dot}
+      </g>`;
+  }).join('');
+
+  const svg = `
+  <svg viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg">
+    <rect x="20" y="20" width="440" height="440" rx="6" fill="${info.bg}" stroke="${info.color}" stroke-width="1.5"/>
+
+    <!-- NSEW for this quadrant -->
+    ${q==='NW'||q==='NE' ? `<text x="240" y="14" text-anchor="middle" font-size="12" font-weight="500" fill="#2C2C2A" font-family="sans-serif">N</text>` : `<text x="240" y="474" text-anchor="middle" font-size="12" font-weight="500" fill="#2C2C2A" font-family="sans-serif">S</text>`}
+    ${q==='NW'||q==='SW' ? `<text x="10"  y="244" text-anchor="middle" font-size="12" font-weight="500" fill="#2C2C2A" font-family="sans-serif">W</text>` : `<text x="472" y="244" text-anchor="middle" font-size="12" font-weight="500" fill="#2C2C2A" font-family="sans-serif">E</text>`}
+
+    <!-- Quadrant name -->
+    <text x="240" y="50" text-anchor="middle" font-size="14" font-weight="500" fill="${info.color}" font-family="sans-serif">${info.label}</text>
+
+    <!-- Grid lines -->
+    <line x1="20" x2="460" y1="240" y2="240" stroke="${info.color}" stroke-width="0.5" stroke-dasharray="4,4" opacity="0.4"/>
+    <line x1="240" y1="20" x2="240" y2="460" stroke="${info.color}" stroke-width="0.5" stroke-dasharray="4,4" opacity="0.4"/>
+
+    <!-- Area pins -->
+    <g font-family="sans-serif">
+      ${areaPins}
+    </g>
+
+    <!-- Rent color legend -->
+    <g font-family="sans-serif" font-size="9">
+      <rect x="330" y="400" width="120" height="58" rx="4" fill="white" stroke="#ccc" stroke-width="0.5"/>
+      <text x="338" y="414" fill="#888">Rent range</text>
+      <circle cx="342" cy="426" r="4" fill="#27ae60"/><text x="350" y="430" fill="#555">Under ₹15k</text>
+      <circle cx="342" cy="440" r="4" fill="#f39c12"/><text x="350" y="444" fill="#555">₹15k – ₹25k</text>
+      <circle cx="342" cy="454" r="4" fill="#c0392b"/><text x="350" y="458" fill="#555">Above ₹25k</text>
+    </g>
+
+  </svg>`;
+
+  document.getElementById('map-wrap').innerHTML = svg;
+}
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+
+function rentColor(rent) {
+  if (!rent || rent === 0) return '#888780';
+  if (rent < 15000)  return '#27ae60';
+  if (rent < 25000)  return '#f39c12';
+  return '#c0392b';
+}
+
+// ── SIDEBAR LIST ─────────────────────────────────────────────────────────────
+
+function renderList() {
+  const list  = document.getElementById('society-list');
+  const label = document.getElementById('page-label');
+
+  let filtered = currentView === 'main'
+    ? [...societies]
+    : societies.filter(s => s.quadrant === currentView);
+
+  filtered.sort((a,b) => a.rent - b.rent);
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state">${currentView==='main' ? 'Click a quadrant, then add societies' : 'Click an area pin to add a society'}</div>`;
+  } else {
+    list.innerHTML = filtered.map(s => `
+      <div class="society-item">
+        <div style="flex:1;min-width:0">
+          <div class="s-name">${s.name}</div>
+          <div class="s-meta">${s.area} · ${s.furnish||''}</div>
+          ${s.notes ? `<div class="s-meta">${s.notes.substring(0,38)}${s.notes.length>38?'…':''}</div>` : ''}
+        </div>
+        <div style="text-align:right;padding-left:8px">
+          <div class="s-price">₹${s.rent.toLocaleString()}</div>
+          <div class="s-del" onclick="deleteSociety(${s.id})">remove</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  if (currentView === 'main') {
+    label.textContent = societies.length + ' societ' + (societies.length===1?'y':'ies') + ' total';
+  } else {
+    const n = filtered.length;
+    label.textContent = QUADRANTS[currentView].label + ' · ' + n + ' societ' + (n===1?'y':'ies');
+  }
+}
+
+function renderQSummary() {
+  const grid = document.getElementById('q-summary');
+  grid.innerHTML = ['NW','NE','SW','SE'].map(q => {
+    const n = societies.filter(s => s.quadrant === q).length;
+    return `<div class="q-btn" onclick="showQuadrant('${q}')">
+      ${q} · ${QUADRANTS[q].label.split(' ')[0]}
+      <div class="q-count">${n} societ${n===1?'y':'ies'}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── MODAL ────────────────────────────────────────────────────────────────────
+
+function openModal(area) {
+  document.getElementById('inp-area').value    = area || '';
+  document.getElementById('inp-name').value    = '';
+  document.getElementById('inp-rent').value    = '';
+  document.getElementById('inp-deposit').value = '';
+  document.getElementById('inp-notes').value   = '';
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('inp-name').focus(), 100);
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function saveSociety() {
+  const name    = document.getElementById('inp-name').value.trim();
+  const area    = document.getElementById('inp-area').value.trim();
+  const rent    = parseInt(document.getElementById('inp-rent').value)    || 0;
+  const deposit = parseInt(document.getElementById('inp-deposit').value) || 0;
+  const furnish = document.getElementById('inp-furnish').value;
+  const notes   = document.getElementById('inp-notes').value.trim();
+
+  if (!name || !area) { alert('Please enter society name and area.'); return; }
+
+  const quadrant = currentView !== 'main' ? currentView : guessQuadrant(area);
+
+  societies.push({ id:Date.now(), name, area, rent, deposit, furnish, notes, quadrant });
+  localStorage.setItem('hyd_societies', JSON.stringify(societies));
+  closeModal();
+
+  if (currentView === 'main') { renderMainMap(); renderList(); }
+  else { renderQuadrantMap(currentView); renderQSummary(); renderList(); }
+}
+
+function guessQuadrant(area) {
+  for (const [q, info] of Object.entries(QUADRANTS)) {
+    if (info.areas.some(a => a.name.toLowerCase() === area.toLowerCase())) return q;
+  }
+  return 'NW';
+}
+
+function deleteSociety(id) {
+  societies = societies.filter(s => s.id !== id);
+  localStorage.setItem('hyd_societies', JSON.stringify(societies));
+  if (currentView === 'main') { renderMainMap(); renderList(); }
+  else { renderQuadrantMap(currentView); renderQSummary(); renderList(); }
+}
+
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+showMain();
+</script>
+</body>
+</html>
