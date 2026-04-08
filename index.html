@@ -270,7 +270,152 @@ header {
 }
 </style>
 </head>
+<style>
+/* ── LOGIN PAGE ── */
+#login-screen {
+  position:fixed; inset:0; z-index:999;
+  background: linear-gradient(160deg, #ffe6f0 0%, #fff0f5 40%, #fce4ec 100%);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:32px 28px;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
+}
+.login-cookie {
+  font-size:72px; line-height:1;
+  margin-bottom:6px;
+  animation: bounce 1.8s ease-in-out infinite;
+}
+@keyframes bounce {
+  0%,100% { transform:translateY(0); }
+  50%      { transform:translateY(-10px); }
+}
+.login-title {
+  font-size:26px; font-weight:700;
+  color:#c2185b; margin-bottom:4px;
+  letter-spacing:-0.5px;
+}
+.login-sub {
+  font-size:14px; color:#e91e8c; opacity:0.7;
+  margin-bottom:32px; text-align:center;
+}
+.login-card {
+  background:white;
+  border-radius:24px;
+  padding:28px 24px;
+  width:100%; max-width:340px;
+  box-shadow:0 8px 32px rgba(194,24,91,0.15);
+}
+.login-field {
+  margin-bottom:16px;
+}
+.login-field label {
+  font-size:12px; font-weight:600;
+  color:#c2185b; text-transform:uppercase;
+  letter-spacing:0.05em; display:block;
+  margin-bottom:6px;
+}
+.login-field input {
+  width:100%; padding:14px 16px;
+  background:#fff0f5; border:1.5px solid #f8bbd0;
+  border-radius:12px; font-size:16px;
+  font-family:inherit; color:#1c1c1e;
+  outline:none;
+  transition:border-color 0.2s;
+  -webkit-appearance:none;
+}
+.login-field input:focus {
+  border-color:#c2185b;
+  background:#fff;
+}
+.login-btn {
+  width:100%; padding:16px;
+  background: linear-gradient(135deg, #e91e8c, #c2185b);
+  color:white; border:none; border-radius:14px;
+  font-size:16px; font-weight:700;
+  font-family:inherit; margin-top:8px;
+  box-shadow:0 4px 16px rgba(194,24,91,0.35);
+  letter-spacing:0.02em;
+}
+.login-error {
+  color:#c2185b; font-size:13px;
+  text-align:center; margin-top:12px;
+  min-height:18px;
+}
+/* ── WELCOME SCREEN ── */
+#welcome-screen {
+  display:none;
+  position:fixed; inset:0; z-index:998;
+  background: linear-gradient(160deg, #ffe6f0 0%, #fff0f5 40%, #fce4ec 100%);
+  flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:32px;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
+  text-align:center;
+}
+.welcome-ribbon { font-size:64px; margin-bottom:8px; animation:spin 1s ease-out; }
+@keyframes spin {
+  0%   { transform:scale(0) rotate(-180deg); opacity:0; }
+  100% { transform:scale(1) rotate(0deg);    opacity:1; }
+}
+.welcome-text {
+  font-size:28px; font-weight:800;
+  color:#c2185b; line-height:1.3;
+  margin-bottom:8px;
+}
+.welcome-sub {
+  font-size:18px; color:#e91e8c;
+  margin-bottom:32px;
+}
+.welcome-enter-btn {
+  padding:16px 40px;
+  background: linear-gradient(135deg, #e91e8c, #c2185b);
+  color:white; border:none; border-radius:16px;
+  font-size:17px; font-weight:700;
+  font-family:inherit;
+  box-shadow:0 4px 20px rgba(194,24,91,0.4);
+}
+.ribbons {
+  position:absolute; inset:0; pointer-events:none; overflow:hidden;
+}
+.ribbon {
+  position:absolute; font-size:28px;
+  animation:fall linear infinite;
+}
+@keyframes fall {
+  0%   { transform:translateY(-40px) rotate(0deg); opacity:1; }
+  100% { transform:translateY(110vh) rotate(360deg); opacity:0; }
+}
+</style>
+
 <body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-cookie">🍪</div>
+  <div class="login-title">Hyd Rental Map</div>
+  <div class="login-sub">Your apartment hunting companion 🎀</div>
+  <div class="login-card">
+    <div class="login-field">
+      <label>Username</label>
+      <input type="text" id="login-user" placeholder="Enter username" autocomplete="username" autocorrect="off" autocapitalize="none"/>
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="login-pass" placeholder="Enter password" autocomplete="current-password"/>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Let's go 🍪</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- WELCOME SCREEN -->
+<div id="welcome-screen">
+  <div class="ribbons" id="ribbon-container"></div>
+  <div class="welcome-ribbon">🎀</div>
+  <div class="welcome-text">Welcome,<br>Cookie Pookie! 🍪</div>
+  <div class="welcome-sub">🎀 Your map is ready 🎀</div>
+  <button class="welcome-enter-btn" onclick="enterApp()">Open the map ✨</button>
+</div>
 
 <!-- HEADER -->
 <header>
@@ -895,6 +1040,64 @@ switchTab = function(tab) {
     renderResources();
   }
 };
+
+// ── LOGIN ────────────────────────────────────────────────────────────────────
+
+function doLogin() {
+  const user = document.getElementById('login-user').value.trim().toLowerCase();
+  const pass = document.getElementById('login-pass').value.trim().toLowerCase();
+  const err  = document.getElementById('login-error');
+
+  if (!user || !pass) {
+    err.textContent = 'Please enter both fields 🍪';
+    return;
+  }
+
+  // credentials — change these to whatever you want
+  if (user === 'cookie' && pass === 'pookie') {
+    err.textContent = '';
+    showWelcome();
+  } else {
+    err.textContent = 'Wrong credentials, try again 🎀';
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-pass').focus();
+  }
+}
+
+function showWelcome() {
+  document.getElementById('login-screen').style.display  = 'none';
+  const ws = document.getElementById('welcome-screen');
+  ws.style.display = 'flex';
+
+  // sprinkle ribbons and cookies
+  const container = document.getElementById('ribbon-container');
+  const emojis = ['🎀','🍪','🎀','🍪','🎀','✨','🎀','🍪'];
+  container.innerHTML = '';
+  for(let i = 0; i < 18; i++) {
+    const el = document.createElement('div');
+    el.className = 'ribbon';
+    el.textContent = emojis[i % emojis.length];
+    el.style.left  = Math.random() * 100 + 'vw';
+    el.style.animationDuration  = (2 + Math.random() * 3) + 's';
+    el.style.animationDelay     = (Math.random() * 2) + 's';
+    el.style.fontSize = (20 + Math.random() * 20) + 'px';
+    container.appendChild(el);
+  }
+}
+
+function enterApp() {
+  document.getElementById('welcome-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display   = 'none';
+}
+
+// allow Enter key on login
+document.addEventListener('DOMContentLoaded', () => {
+  ['login-user','login-pass'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if(e.key === 'Enter') doLogin();
+    });
+  });
+});
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
 showMain();
