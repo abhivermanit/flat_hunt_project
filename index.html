@@ -256,14 +256,17 @@ header {
 /* ── BACK TO MAP BUTTON ── */
 #back-to-map-btn {
   display:none;
-  margin:0 12px 10px;
-  width:calc(100% - 24px);
-  padding:13px;
+  position:fixed;
+  left:16px; right:16px;
+  bottom: calc(var(--nav-h) + 80px);
+  z-index:45;
+  padding:16px;
   background:#0C447C; color:white;
-  border:none; border-radius:12px;
-  font-size:15px; font-weight:600;
+  border:none; border-radius:14px;
+  font-size:16px; font-weight:700;
   font-family:inherit;
-  box-shadow:0 2px 8px rgba(12,68,124,0.3);
+  box-shadow:0 4px 16px rgba(12,68,124,0.5);
+  letter-spacing:0.02em;
 }
 </style>
 </head>
@@ -562,8 +565,20 @@ function showMain() {
 }
 
 function goBack() {
-  showMain();
-  switchTab('map');
+  currentView = 'main';
+  document.getElementById('back-btn').style.display        = 'none';
+  document.getElementById('back-to-map-btn').style.display = 'none';
+  document.getElementById('page-title').textContent = 'Hyd Rental Map';
+  document.getElementById('page-label').textContent = 'Tap quadrant to explore';
+  document.getElementById('map-hint').textContent   = 'Tap a quadrant to zoom in';
+  document.getElementById('list-title').textContent = 'All societies';
+  renderMainMap(); renderList(); renderQSummary();
+  // force tab switch
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-map').classList.add('active');
+  document.getElementById('tab-map').classList.add('active');
+  document.getElementById('fab').style.display = 'flex';
 }
 
 function showQuadrant(q) {
@@ -671,13 +686,17 @@ function renderQuadrantMap(q) {
   const ewLabel = (q==='NW'||q==='SW') ? `<text x="10" y="244" text-anchor="middle" font-size="13" font-weight="500" fill="#2C2C2A" font-family="sans-serif">W</text>` : `<text x="472" y="244" text-anchor="middle" font-size="13" font-weight="500" fill="#2C2C2A" font-family="sans-serif">E</text>`;
 
   document.getElementById('map-wrap').innerHTML = `
-  <svg viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg">
-    <rect x="20" y="20" width="440" height="440" rx="8" fill="${info.bg}" stroke="${info.color}" stroke-width="2"/>
+  <svg viewBox="0 0 480 520" xmlns="http://www.w3.org/2000/svg">
+    <!-- BACK BUTTON — always visible at top -->
+    <rect x="20" y="8" width="440" height="44" rx="10" fill="#0C447C" onclick="goBack()" style="cursor:pointer"/>
+    <text x="240" y="35" text-anchor="middle" font-size="16" font-weight="700" fill="white" font-family="sans-serif" style="pointer-events:none">← Back to full map</text>
+
+    <rect x="20" y="60" width="440" height="440" rx="8" fill="${info.bg}" stroke="${info.color}" stroke-width="2"/>
     ${nLabel}${ewLabel}
-    <text x="240" y="52" text-anchor="middle" font-size="15" font-weight="600" fill="${info.color}" font-family="sans-serif">${info.label}</text>
-    <line x1="20" x2="460" y1="240" y2="240" stroke="${info.color}" stroke-width="0.5" stroke-dasharray="4,4" opacity="0.4"/>
-    <line x1="240" y1="20" x2="240" y2="460" stroke="${info.color}" stroke-width="0.5" stroke-dasharray="4,4" opacity="0.4"/>
-    <g font-family="sans-serif">${pins}</g>
+    <text x="240" y="92" text-anchor="middle" font-size="15" font-weight="600" fill="${info.color}" font-family="sans-serif">${info.label}</text>
+    <line x1="20" x2="460" y1="280" y2="280" stroke="${info.color}" stroke-width="0.5" stroke-dasharray="4,4" opacity="0.4"/>
+    <line x1="240" y1="60" x2="240" y2="500" stroke="${info.color}" stroke-width="0.5" stroke-dasharray="4,4" opacity="0.4"/>
+    <g font-family="sans-serif" transform="translate(0,40)">${pins}</g>
   </svg>`;
 }
 
