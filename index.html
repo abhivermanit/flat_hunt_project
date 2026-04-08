@@ -252,6 +252,19 @@ header {
   font-family:inherit; margin-top:4px;
 }
 .res-empty { text-align:center; color:#8e8e93; font-size:13px; padding:16px 0; }
+
+/* ── BACK TO MAP BUTTON ── */
+#back-to-map-btn {
+  display:none;
+  margin:0 12px 10px;
+  width:calc(100% - 24px);
+  padding:13px;
+  background:#0C447C; color:white;
+  border:none; border-radius:12px;
+  font-size:15px; font-weight:600;
+  font-family:inherit;
+  box-shadow:0 2px 8px rgba(12,68,124,0.3);
+}
 </style>
 </head>
 <body>
@@ -270,6 +283,7 @@ header {
 <!-- MAP -->
 <div class="page active" id="page-map">
   <div class="map-container">
+    <button id="back-to-map-btn" onclick="goBack()">← Back to full map</button>
     <div class="tap-hint" id="map-hint">Tap a quadrant to zoom in</div>
     <div class="map-box" id="map-wrap"></div>
   </div>
@@ -538,7 +552,8 @@ function switchTab(tab) {
 
 function showMain() {
   currentView = 'main';
-  document.getElementById('back-btn').style.display = 'none';
+  document.getElementById('back-btn').style.display        = 'none';
+  document.getElementById('back-to-map-btn').style.display = 'none';
   document.getElementById('page-title').textContent = 'Hyd Rental Map';
   document.getElementById('page-label').textContent = 'Tap quadrant to explore';
   document.getElementById('map-hint').textContent   = 'Tap a quadrant to zoom in';
@@ -554,7 +569,8 @@ function goBack() {
 function showQuadrant(q) {
   currentView = q;
   const info = QUADRANTS[q];
-  document.getElementById('back-btn').style.display = '';
+  document.getElementById('back-btn').style.display       = '';
+  document.getElementById('back-to-map-btn').style.display = '';
   document.getElementById('page-title').textContent = info.label;
   document.getElementById('page-label').textContent = 'Tap pin to add society';
   document.getElementById('map-hint').textContent   = 'Tap any area pin to add a society';
