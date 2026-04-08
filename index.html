@@ -446,8 +446,20 @@ const DEFAULT_SOCIETIES = [
   { id:3, name:'Jains Carlton Creek',       area:'Khajaguda', rent:0, deposit:0, furnish:'Semi-furnished', notes:'', pricerange:'', balcony:'', sunlight:'', quadrant:'SW' },
 ];
 
-let stored = JSON.parse(localStorage.getItem('hyd_societies') || 'null');
-if (!stored) { stored = DEFAULT_SOCIETIES; localStorage.setItem('hyd_societies', JSON.stringify(stored)); }
+let stored = null;
+try {
+  stored = JSON.parse(localStorage.getItem('hyd_societies'));
+} catch (e) {
+  stored = null;
+}
+
+if (!stored) {
+  stored = DEFAULT_SOCIETIES;
+  try {
+    localStorage.setItem('hyd_societies', JSON.stringify(stored));
+  } catch (e) {}
+}
+
 let societies = stored;
 
 // ── TAB SWITCHING ────────────────────────────────────────────────────────────
@@ -690,7 +702,9 @@ function saveSociety() {
   if(!name||!area){ alert('Enter society name and area'); return; }
   const quadrant = currentView!=='main' ? currentView : guessQuadrant(area);
   societies.push({id:Date.now(),name,area,rent,deposit,furnish,notes,pricerange,balcony,sunlight,quadrant});
-  localStorage.setItem('hyd_societies',JSON.stringify(societies));
+  try {
+  localStorage.setItem('hyd_societies', JSON.stringify(societies));
+} catch(e){}
   closeModal();
   if(currentView==='main') renderMainMap();
   else renderQuadrantMap(currentView);
@@ -706,7 +720,9 @@ function guessQuadrant(area) {
 
 function deleteSociety(id) {
   societies = societies.filter(s=>s.id!==id);
-  localStorage.setItem('hyd_societies',JSON.stringify(societies));
+  try {
+  localStorage.setItem('hyd_societies', JSON.stringify(societies));
+} catch(e){}
   if(currentView==='main') renderMainMap();
   else renderQuadrantMap(currentView);
   renderList(); renderQSummary();
