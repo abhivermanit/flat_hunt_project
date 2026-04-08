@@ -232,6 +232,26 @@ header {
 /* quadrant overlay tap area */
 .q-overlay { opacity:0; cursor:pointer; }
 .area-pin  { cursor:pointer; }
+
+/* ── RESOURCES ── */
+.res-card {
+  background:white; border-radius:12px;
+  padding:14px; margin-bottom:8px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.06);
+  display:flex; justify-content:space-between; align-items:flex-start;
+}
+.res-name    { font-size:14px; font-weight:600; color:#1c1c1e; margin-bottom:3px; }
+.res-contact { font-size:13px; color:#0C447C; margin-bottom:2px; }
+.res-notes   { font-size:12px; color:#8e8e93; }
+.res-del     { font-size:12px; color:#ff3b30; margin-top:4px; text-align:right; }
+.res-add-btn {
+  width:100%; padding:13px;
+  background:white; color:#0C447C;
+  border:0.5px dashed #0C447C;
+  border-radius:12px; font-size:14px;
+  font-family:inherit; margin-top:4px;
+}
+.res-empty { text-align:center; color:#8e8e93; font-size:13px; padding:16px 0; }
 </style>
 </head>
 <body>
@@ -296,6 +316,45 @@ header {
   </div>
 </div>
 
+<!-- RESOURCES PAGE -->
+<div class="page" id="page-resources">
+  <div style="padding:16px">
+
+    <div class="section-label" style="margin-bottom:10px">Brokers</div>
+    <div id="broker-list"></div>
+    <button class="res-add-btn" onclick="openResModal('broker')">+ Add broker</button>
+
+    <div class="section-label" style="margin:16px 0 10px">Websites</div>
+    <div id="website-list"></div>
+    <button class="res-add-btn" onclick="openResModal('website')">+ Add website</button>
+
+    <div class="section-label" style="margin:16px 0 10px">Other sources</div>
+    <div id="other-list"></div>
+    <button class="res-add-btn" onclick="openResModal('other')">+ Add source</button>
+
+  </div>
+</div>
+
+<!-- RESOURCE MODAL -->
+<div class="sheet-overlay" id="res-sheet-overlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="res-sheet-title">Add broker</div>
+    <div class="sheet-body">
+      <span class="sheet-label">Name</span>
+      <input class="sheet-input" type="text" id="res-inp-name" placeholder="e.g. Ravi Kumar"/>
+      <span class="sheet-label" id="res-contact-label">Phone number</span>
+      <input class="sheet-input" type="tel" id="res-inp-contact" placeholder="e.g. 9876543210" inputmode="tel"/>
+      <span class="sheet-label">Notes</span>
+      <textarea class="sheet-input" id="res-inp-notes" rows="2" placeholder="Areas covered, speciality..." style="resize:none;height:64px"></textarea>
+    </div>
+    <div class="sheet-actions">
+      <button class="sheet-btn-cancel" onclick="closeResModal()">Cancel</button>
+      <button class="sheet-btn-save" onclick="saveResource()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- FAB -->
 <button class="fab" id="fab" onclick="openModal('')">+</button>
 
@@ -312,6 +371,10 @@ header {
   <div class="nav-tab" id="tab-legend" onclick="switchTab('legend')">
     <div class="nav-icon">🎨</div>
     <div>Legend</div>
+  </div>
+  <div class="nav-tab" id="tab-resources" onclick="switchTab('resources')">
+    <div class="nav-icon">📋</div>
+    <div>Resources</div>
   </div>
 </nav>
 
@@ -446,20 +509,8 @@ const DEFAULT_SOCIETIES = [
   { id:3, name:'Jains Carlton Creek',       area:'Khajaguda', rent:0, deposit:0, furnish:'Semi-furnished', notes:'', pricerange:'', balcony:'', sunlight:'', quadrant:'SW' },
 ];
 
-let stored = null;
-try {
-  stored = JSON.parse(localStorage.getItem('hyd_societies'));
-} catch (e) {
-  stored = null;
-}
-
-if (!stored) {
-  stored = DEFAULT_SOCIETIES;
-  try {
-    localStorage.setItem('hyd_societies', JSON.stringify(stored));
-  } catch (e) {}
-}
-
+let stored = JSON.parse(localStorage.getItem('hyd_societies') || 'null');
+if (!stored) { stored = DEFAULT_SOCIETIES; localStorage.setItem('hyd_societies', JSON.stringify(stored)); }
 let societies = stored;
 
 // ── TAB SWITCHING ────────────────────────────────────────────────────────────
@@ -497,6 +548,7 @@ function showMain() {
 
 function goBack() {
   showMain();
+  switchTab('map');
 }
 
 function showQuadrant(q) {
@@ -702,9 +754,7 @@ function saveSociety() {
   if(!name||!area){ alert('Enter society name and area'); return; }
   const quadrant = currentView!=='main' ? currentView : guessQuadrant(area);
   societies.push({id:Date.now(),name,area,rent,deposit,furnish,notes,pricerange,balcony,sunlight,quadrant});
-  try {
-  localStorage.setItem('hyd_societies', JSON.stringify(societies));
-} catch(e){}
+  localStorage.setItem('hyd_societies',JSON.stringify(societies));
   closeModal();
   if(currentView==='main') renderMainMap();
   else renderQuadrantMap(currentView);
@@ -720,9 +770,7 @@ function guessQuadrant(area) {
 
 function deleteSociety(id) {
   societies = societies.filter(s=>s.id!==id);
-  try {
-  localStorage.setItem('hyd_societies', JSON.stringify(societies));
-} catch(e){}
+  localStorage.setItem('hyd_societies',JSON.stringify(societies));
   if(currentView==='main') renderMainMap();
   else renderQuadrantMap(currentView);
   renderList(); renderQSummary();
@@ -731,6 +779,87 @@ function deleteSociety(id) {
 document.getElementById('sheet-overlay').addEventListener('click',function(e){
   if(e.target===this) closeModal();
 });
+
+document.getElementById('res-sheet-overlay').addEventListener('click',function(e){
+  if(e.target===this) closeResModal();
+});
+
+// ── RESOURCES ────────────────────────────────────────────────────────────────
+
+let resources = JSON.parse(localStorage.getItem('hyd_resources')||'[]');
+let currentResType = 'broker';
+
+function renderResources() {
+  const types = ['broker','website','other'];
+  const ids   = ['broker-list','website-list','other-list'];
+  types.forEach((type, i) => {
+    const items = resources.filter(r => r.type === type);
+    const el    = document.getElementById(ids[i]);
+    if(items.length === 0) {
+      el.innerHTML = `<div class="res-empty">None added yet</div>`;
+      return;
+    }
+    el.innerHTML = items.map(r => `
+      <div class="res-card">
+        <div style="flex:1;min-width:0">
+          <div class="res-name">${r.name}</div>
+          ${r.contact ? `<div class="res-contact">${r.type==='website'?'<a href="'+r.contact+'" style="color:#0C447C">'+r.contact+'</a>':r.contact}</div>` : ''}
+          ${r.notes   ? `<div class="res-notes">${r.notes}</div>` : ''}
+        </div>
+        <div style="padding-left:10px;flex-shrink:0">
+          ${r.type==='broker' ? `<a href="tel:${r.contact}" style="display:inline-block;background:#0C447C;color:white;border-radius:8px;padding:5px 10px;font-size:12px;text-decoration:none">Call</a>` : ''}
+          ${r.type==='website'? `<a href="${r.contact}" target="_blank" style="display:inline-block;background:#0C447C;color:white;border-radius:8px;padding:5px 10px;font-size:12px;text-decoration:none">Open</a>` : ''}
+          <div class="res-del" onclick="deleteResource(${r.id})">remove</div>
+        </div>
+      </div>`).join('');
+  });
+}
+
+function openResModal(type) {
+  currentResType = type;
+  const titles   = { broker:'Add broker', website:'Add website', other:'Add source' };
+  const contacts = { broker:'Phone number', website:'URL', other:'Contact / link' };
+  document.getElementById('res-sheet-title').textContent    = titles[type];
+  document.getElementById('res-contact-label').textContent  = contacts[type];
+  document.getElementById('res-inp-name').value    = '';
+  document.getElementById('res-inp-contact').value = '';
+  document.getElementById('res-inp-notes').value   = '';
+  document.getElementById('res-inp-contact').type  = type==='broker' ? 'tel' : 'text';
+  document.getElementById('res-inp-contact').placeholder = type==='broker' ? 'e.g. 9876543210' : type==='website' ? 'e.g. https://magicbricks.com' : 'Phone / link';
+  document.getElementById('res-sheet-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('res-inp-name').focus(),300);
+}
+
+function closeResModal() {
+  document.getElementById('res-sheet-overlay').classList.remove('open');
+}
+
+function saveResource() {
+  const name    = document.getElementById('res-inp-name').value.trim();
+  const contact = document.getElementById('res-inp-contact').value.trim();
+  const notes   = document.getElementById('res-inp-notes').value.trim();
+  if(!name){ alert('Enter a name'); return; }
+  resources.push({ id:Date.now(), type:currentResType, name, contact, notes });
+  try { localStorage.setItem('hyd_resources', JSON.stringify(resources)); } catch(e){}
+  closeResModal();
+  renderResources();
+}
+
+function deleteResource(id) {
+  resources = resources.filter(r => r.id !== id);
+  try { localStorage.setItem('hyd_resources', JSON.stringify(resources)); } catch(e){}
+  renderResources();
+}
+
+// ── patch switchTab to handle resources ──────────────────────────────────────
+const _origSwitchTab = switchTab;
+switchTab = function(tab) {
+  _origSwitchTab(tab);
+  if(tab === 'resources') {
+    document.getElementById('fab').style.display = 'none';
+    renderResources();
+  }
+};
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
 showMain();
